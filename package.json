@@ -1,21 +1,52 @@
 {
   "name": "agua-lily-mobile",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "lint": "expo lint"
   },
   "dependencies": {
+    "@expo/vector-icons": "^14.1.0",
+    "@formkit/tempo": "^0.1.2",
+    "@gorhom/bottom-sheet": "^5.1.6",
+    "@tanstack/react-query": "^5.81.5",
+    "@types/react": "~19.0.10",
+    "axios": "^1.10.0",
     "expo": "~53.0.15",
+    "expo-constants": "~17.1.6",
+    "expo-device": "^7.1.4",
+    "expo-linking": "^7.1.6",
+    "expo-notifications": "~0.31.3",
+    "expo-router": "^5.1.2",
+    "expo-secure-store": "~14.2.3",
     "expo-status-bar": "~2.2.3",
+    "lucide-react-native": "^0.525.0",
+    "nativewind": "^4.1.23",
     "react": "19.0.0",
-    "react-native": "0.79.4"
+    "react-native": "0.79.4",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-reanimated": "~3.17.4",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "^4.11.1",
+    "react-native-svg": "15.11.2",
+    "typescript": "~5.8.3",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "@types/react": "~19.0.10",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~9.2.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.5.1",
+    "prettier": "^3.6.2",
+    "prettier-plugin-tailwindcss": "^0.5.14",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.8.3"
   },
   "private": true
 }
