@@ -8,6 +8,7 @@ export default function Profile() {
     <>
       <Stack.Screen
         options={{
+          headerShown: true,
           headerTitle: "Perfil",
           headerTitleAlign: "center",
           headerTintColor: "#3B82F6",

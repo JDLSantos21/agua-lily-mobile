@@ -18,11 +18,15 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: "Inicio", tabBarIcon: HomeIcon }}
+        options={{ title: "Inicio", tabBarIcon: HomeIcon, headerShown: false }}
       />
       <Tabs.Screen
         name="settings"
-        options={{ title: "Configuración", tabBarIcon: SettingsIcon }}
+        options={{
+          title: "Configuración",
+          tabBarIcon: SettingsIcon,
+          headerShown: true,
+        }}
       />
     </Tabs>
   );

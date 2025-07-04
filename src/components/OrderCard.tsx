@@ -7,7 +7,7 @@ import { Animated, Pressable, Text, View } from "react-native";
 export default function OrderCard({ order }) {
   return (
     <Link href={`/${order.tracking_code}`} asChild>
-      <Pressable>
+      <Pressable className="active:opacity-80">
         <View className="flex-row items-center p-5 my-1 border border-gray-300 bg-slate-50 rounded-xl">
           <View>
             <Text className="text-xl font-semibold">{order.customer_name}</Text>

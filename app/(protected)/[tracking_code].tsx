@@ -71,6 +71,7 @@ export default function OrderDetails() {
     >
       <Stack.Screen
         options={{
+          headerShown: true,
           title: `Pedido ${tracking_code}`,
           headerTitleStyle: { color: "#3B82F6" },
           headerTintColor: "#3B82F6",
