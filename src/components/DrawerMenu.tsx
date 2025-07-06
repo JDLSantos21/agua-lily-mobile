@@ -5,7 +5,6 @@ import {
   Text,
   TouchableOpacity,
   SafeAreaView,
-  StatusBar,
   Dimensions,
   StyleSheet,
 } from "react-native";
@@ -197,7 +196,7 @@ const DrawerMenu = forwardRef<DrawerMenuRef, DrawerMenuProps>(
 
     return (
       <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#1F2937" />
+        {/* <StatusBar barStyle="light-content" backgroundColor="#1F2937" /> */}
 
         {/* Área para detectar gestos desde el borde izquierdo */}
         <GestureDetector gesture={edgePanGesture}>

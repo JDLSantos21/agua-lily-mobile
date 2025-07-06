@@ -6,7 +6,6 @@ export const useDrawer = () => {
   const drawerRef = useRef<DrawerMenuRef>(null);
 
   const openDrawer = useCallback(() => {
-    console.log("Opening drawer");
     drawerRef.current?.open();
   }, []);
 

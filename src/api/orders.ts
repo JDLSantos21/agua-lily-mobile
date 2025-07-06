@@ -1,49 +1,26 @@
 import { api } from "@/services/api";
-import { authStore } from "@/store/auth.store";
-
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+import { UpdateOrderStatusRequest } from "@/types/orders.types";
 
 export async function getOrders() {
-  const token = authStore.getState().accessToken;
-  if (!token) {
-    throw new Error("Access token is missing. Please log in.");
-  }
-
-  const res = await api.get("/orders?limit=10").then((r) => r.data);
-
-  return res;
+  return await api.get("/orders?limit=15").then((r) => r.data);
 }
 
 export async function getOrderByCode(code: string) {
-  // const ORDER = `${BASE_URL}/orders/track/${code}`;
+  return await api.get(`/orders/track/${code}`).then((r) => r.data);
+}
 
-  const token = authStore.getState().accessToken;
-  if (!token) {
-    throw new Error("Access token is missing. Please log in.");
-  }
-
-  const url = `${BASE_URL}/orders//track/${code}`;
-
-  const rawData = await fetch(url, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
-
-  const json = await rawData.json();
-
-  if (json.success === false) {
-    if (json.message === "Unauthorized") {
-      throw new Error("Unauthorized access. Please check your token.");
-    }
-    throw new Error(json.message || "Error fetching order");
-  }
-
-  if (json.success === true && json.data) {
-    return json.data;
-  }
-
-  throw new Error("Order not found or no data returned");
+export async function updateOrderStatus(
+  orderId: number,
+  data: UpdateOrderStatusRequest
+): Promise<{ success: boolean; message: string }> {
+  return await api
+    .patch(`/orders/${orderId}/status`, {
+      status: data.status,
+      notes: data.notes || null,
+    })
+    .then((r) => r.data)
+    .catch((error) => {
+      console.error("Error updating order status:", error);
+      return null;
+    });
 }

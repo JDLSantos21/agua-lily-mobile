@@ -43,3 +43,9 @@ export interface Order {
   items?: OrderItem[];
   status_history?: OrderStatusHistory[];
 }
+
+export interface UpdateOrderStatusRequest {
+  status: OrderStatus;
+  notes?: string | null;
+  tracking_code?: string;
+}

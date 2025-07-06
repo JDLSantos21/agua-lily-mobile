@@ -14,50 +14,37 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-/* ---------- response: refresh automático ---------- */
-let refreshing = false;
-let queue: ((t: string | null) => void)[] = [];
+let refreshPromise: Promise<string> | null = null;
 
 api.interceptors.response.use(
   (r) => r,
-  async (error: AxiosError<any>) => {
+  (error: AxiosError) => {
     const original = error.config as any;
-    const data = error.response?.data;
-    const status = error.response?.status;
-
     if (
-      status === 401 &&
-      data?.message === "TOKEN_EXPIRED" &&
+      error.response?.status === 401 &&
+      typeof error.response?.data === "object" &&
+      error.response?.data !== null &&
+      (error.response.data as { message?: string }).message ===
+        "TOKEN_EXPIRED" &&
       !original._retry
     ) {
       original._retry = true;
 
-      // evita varios refresh a la vez
-      if (!refreshing) {
-        refreshing = true;
-        try {
-          await authStore.getState().refresh(); // POST /auth/refresh
-          queue.forEach((cb) => cb(authStore.getState().accessToken as string));
-          queue = [];
-        } catch (e) {
-          queue.forEach((cb) => cb(null)); // notifica fallo
-          authStore.getState().logout();
-          return Promise.reject(e);
-        } finally {
-          refreshing = false;
-        }
+      // si ya hay un refresh en curso reutilízalo
+      if (!refreshPromise) {
+        refreshPromise = authStore
+          .getState()
+          .refresh() // POST /auth/refresh
+          .then(() => authStore.getState().accessToken as string)
+          .finally(() => {
+            refreshPromise = null; // se limpia al terminar
+          });
       }
 
-      // espera a que termine la primera llamada refresh
-      return new Promise((resolve, reject) => {
-        queue.push((newToken) => {
-          if (newToken) {
-            original.headers.Authorization = `Bearer ${newToken}`;
-            resolve(api(original));
-          } else {
-            reject(error);
-          }
-        });
+      // esperamos al refresh (sea propio o ajeno) y repetimos el request
+      return refreshPromise.then((newToken) => {
+        original.headers.Authorization = `Bearer ${newToken}`;
+        return api(original);
       });
     }
 

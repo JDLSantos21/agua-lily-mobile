@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/shared/hooks/useAuth";
+import { StatusBar } from "expo-status-bar";
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -16,6 +17,7 @@ export default function Login() {
 
   return (
     <View className="justify-center flex-1 px-6 bg-white">
+      <StatusBar style="dark" />
       <Text className="mb-8 text-3xl font-bold text-center text-blue-600">
         Iniciar Sesión
       </Text>

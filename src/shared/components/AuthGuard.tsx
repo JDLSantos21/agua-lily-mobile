@@ -1,8 +1,8 @@
 // shared/components/AuthGuard.tsx
 import { ReactNode, useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { useRouter } from "expo-router";
+import Loading from "./Loading";
 
 export default function AuthGuard({ children }: { children: ReactNode }) {
   const { accessToken } = useAuth();
@@ -18,9 +18,12 @@ export default function AuthGuard({ children }: { children: ReactNode }) {
 
   if (checking)
     return (
-      <View className="items-center justify-center flex-1">
-        <ActivityIndicator size="large" />
-      </View>
+      <Loading
+        title="Verificando sesión"
+        message="Esto solo tomará un momento..."
+        color="#3B82F6"
+        size="large"
+      />
     );
 
   return <>{children}</>;
