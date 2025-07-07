@@ -1,27 +1,14 @@
 // app/_layout.tsx
 import "../global.css";
+
 import { Slot } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useFonts } from "expo-font";
-import SplashScreen from "@/shared/components/SplashScreen";
-
-// import * as Notifications from "expo-notifications";
-
-// Notifications.setNotificationHandler({
-//   handleNotification: async () => ({
-//     shouldShowAlert: true,
-//     shouldPlaySound: true,
-//     shouldSetBadge: true,
-//     shouldShowBanner: true,
-//   }),
-// });
 
 export default function RootLayout() {
-  // const [isAppReady, setIsAppReady] = useState(false);
-  // 1️⃣  Fuente(s)
   const [loaded] = useFonts({
     "Kanit-Bold": require("../assets/fonts/Kanit/Kanit-Bold.ttf"),
     "Kanit-Black": require("../assets/fonts/Kanit/Kanit-Black.ttf"),
@@ -36,7 +23,7 @@ export default function RootLayout() {
     })
   ).current;
 
-  if (!loaded) return <SplashScreen />;
+  if (!loaded) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

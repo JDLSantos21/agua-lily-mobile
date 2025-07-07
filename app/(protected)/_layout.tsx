@@ -8,8 +8,6 @@ import { User } from "lucide-react-native";
 // import DrawerMenu from "@/components/DrawerMenu";
 import { StatusBar } from "expo-status-bar";
 
-const logo = require("@assets/text-logo.png");
-
 export default function ProtectedLayout() {
   // const { drawerRef } = useDrawer();
 
@@ -63,7 +61,7 @@ export default function ProtectedLayout() {
                   }}
                 >
                   <Image
-                    source={logo}
+                    source={require("../../assets/logo.png")}
                     style={{
                       width: 120,
                       height: 35,
