@@ -2,8 +2,8 @@ import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
 import Constants from "expo-constants";
-import { PushTokenService } from "@/services/pushtoken.service";
 import { get } from "./secureStore";
+import { registerPushToken } from "@/features/notifications/api/registerToken.api";
 
 function generateDeviceId(): string {
   const platform = Platform.OS;
@@ -48,21 +48,27 @@ export async function registerForPushNotificationsAsync(userId: string) {
       return alreadyRegistered;
     }
 
-    const projectId =
-      Constants.expoConfig.extra.projectId ?? Constants.easConfig.projectId;
+    // const projectId =
+    //   Constants.expoConfig.extra.projectId ?? Constants.easConfig.projectId;
 
-    if (!projectId) {
-      alert(
-        "No se pudo obtener el ID del proyecto de Expo. Asegúrate de que tu configuración de Expo esté correcta."
-      );
-      return;
-    }
+    // if (!projectId) {
+    //   alert(
+    //     "No se pudo obtener el ID del proyecto de Expo. Asegúrate de que tu configuración de Expo esté correcta."
+    //   );
+    //   return;
+    // }
 
     try {
+      const projectId =
+        Constants?.expoConfig?.extra?.eas?.projectId ??
+        Constants?.easConfig?.projectId;
+
+      if (!projectId) {
+        throw new Error("Project ID not found");
+      }
+
       const pushTokenString = (
-        await Notifications.getExpoPushTokenAsync({
-          projectId,
-        })
+        await Notifications.getExpoPushTokenAsync({ projectId })
       ).data;
 
       const pushTokenData = {
@@ -73,7 +79,7 @@ export async function registerForPushNotificationsAsync(userId: string) {
           Platform.OS === "ios" ? ("ios" as const) : ("android" as const),
       };
 
-      PushTokenService.savePushToken(pushTokenData);
+      registerPushToken(pushTokenData);
       return pushTokenString;
     } catch (error) {
       console.error("Error obteniendo el token de notificación:", error);

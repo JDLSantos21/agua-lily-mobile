@@ -23,10 +23,14 @@ export async function savePushToken(userId: string) {
   }
 
   const projectId =
-    Constants.expoConfig?.extra?.projectId ?? Constants.easConfig?.projectId;
+    Constants.easConfig?.projectId ??
+    Constants.expoConfig?.extra?.eas?.projectId ??
+    Constants.expoConfig?.extra?.projectId;
   if (!projectId) throw new Error("Expo project ID is missing");
 
   const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+
+  console.log(projectId, token);
 
   await registerPushToken({
     token,
