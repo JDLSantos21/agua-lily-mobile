@@ -1,9 +1,9 @@
 "use client";
 
 import ScreenLayout from "@/shared/components/ScreenLayout";
-import { useAuth } from "@/shared/hooks/useAuth";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { authStore } from "@/store/auth.store";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import { Text, View, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -171,10 +171,7 @@ export default function Profile() {
                 title="Notificaciones"
                 subtitle="Gestionar alertas y notificaciones"
                 onPress={() =>
-                  Alert.alert(
-                    "Próximamente",
-                    "Esta función estará disponible pronto"
-                  )
+                  router.push("/(protected)/(settings)/notifications")
                 }
               />
               <View className="h-px mx-4 bg-gray-100" />

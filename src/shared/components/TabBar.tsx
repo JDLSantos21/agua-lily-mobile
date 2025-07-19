@@ -1,12 +1,10 @@
 import { Pressable, View } from "react-native";
 import { useLinkBuilder, useTheme } from "@react-navigation/native";
 import { Text } from "@react-navigation/elements";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function TabBar({ state, descriptors, navigation }) {
   const { colors } = useTheme();
   const { buildHref } = useLinkBuilder();
-  const insets = useSafeAreaInsets();
 
   return (
     <View
@@ -16,7 +14,6 @@ export function TabBar({ state, descriptors, navigation }) {
         alignItems: "center",
         paddingVertical: 10,
         backgroundColor: "#fff",
-        marginBottom: insets.bottom,
       }}
     >
       {state.routes.map((route, index) => {

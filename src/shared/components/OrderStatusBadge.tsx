@@ -1,19 +1,61 @@
-import { Text } from "react-native";
+import { Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function OrderStatusBadge({ status }) {
-  const statusStyles = {
-    pendiente: "bg-yellow-100 text-yellow-800",
-    preparando: "bg-blue-100 text-blue-800",
-    despachado: "bg-purple-100 text-purple-800",
-    entregado: "bg-green-100 text-green-800",
-    cancelado: "bg-red-100 text-red-800",
+  const statusConfig = {
+    pendiente: {
+      bg: "#FEF3C7",
+      textColor: "#92400E",
+      icon: "time-outline",
+      iconColor: "#D97706",
+    },
+    preparando: {
+      bg: "#DBEAFE",
+      textColor: "#1E40AF",
+      icon: "restaurant-outline",
+      iconColor: "#2563EB",
+    },
+    despachado: {
+      bg: "#F3E8FF",
+      textColor: "#6B21A8",
+      icon: "car-outline",
+      iconColor: "#7C3AED",
+    },
+    entregado: {
+      bg: "#D1FAE5",
+      textColor: "#065F46",
+      icon: "checkmark-circle-outline",
+      iconColor: "#059669",
+    },
+    cancelado: {
+      bg: "#FEE2E2",
+      textColor: "#991B1B",
+      icon: "close-circle-outline",
+      iconColor: "#DC2626",
+    },
   };
 
+  const config = statusConfig[status] || statusConfig.pendiente;
+
   return (
-    <Text
-      className={`py-2 px-8 justify-center items-center rounded-full text-sm font-medium ${statusStyles[status]}`}
+    <View
+      className="flex-row items-center px-4 py-3 rounded-2xl"
+      style={{
+        backgroundColor: config.bg,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+        elevation: 2,
+      }}
     >
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </Text>
+      <Ionicons name={config.icon} size={20} color={config.iconColor} />
+      <Text
+        className="ml-2 text-sm font-bold"
+        style={{ color: config.textColor }}
+      >
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </Text>
+    </View>
   );
 }

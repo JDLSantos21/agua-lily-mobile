@@ -1,6 +1,6 @@
 // shared/components/AuthGuard.tsx
 import { ReactNode, useEffect, useState } from "react";
-import { useAuth } from "@/shared/hooks/useAuth";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useRouter } from "expo-router";
 import Loading from "./Loading";
 

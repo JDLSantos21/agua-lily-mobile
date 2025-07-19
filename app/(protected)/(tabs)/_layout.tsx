@@ -1,6 +1,6 @@
 // app/(protected)/(tabs)/_layout.tsx
 import { Tabs } from "expo-router";
-import { TabBar } from "@/components/TabBar";
+import { TabBar } from "@/shared/components/tabbar/TabBar";
 
 export default function TabsLayout() {
   return (
@@ -10,16 +10,16 @@ export default function TabsLayout() {
         options={{ title: "Inicio", headerShown: false }}
       />
       <Tabs.Screen
-        name="history"
+        name="equipments"
         options={{
-          title: "Historial",
+          title: "Equipos",
           headerShown: false,
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="history"
         options={{
-          title: "Ajustes",
+          title: "Historial",
           headerShown: false,
         }}
       />
