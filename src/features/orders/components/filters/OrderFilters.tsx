@@ -4,10 +4,9 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useState, memo } from "react";
+import { memo } from "react";
 import { OrderStatus } from "@/types/orders.types";
 import {
   DateRangeType,
@@ -45,8 +44,8 @@ export default memo(function OrderFiltersComponent({
   onUpdateSort,
   onResetFilters,
 }: OrderFiltersProps) {
-  const [showFiltersModal, setShowFiltersModal] = useState(false);
-  const [showSortModal, setShowSortModal] = useState(false);
+  // const [showFiltersModal, setShowFiltersModal] = useState(false);
+  // const [showSortModal, setShowSortModal] = useState(false);
 
   const renderStatusFilter = () => (
     <View className="mb-6">
@@ -184,10 +183,22 @@ export default memo(function OrderFiltersComponent({
             <Ionicons name="search" size={20} color="white" />
           </TouchableOpacity>
         </View>
+
+        {activeFiltersCount > 0 && (
+          <TouchableOpacity
+            className="flex-row items-center justify-center px-3 py-2 mt-5 bg-red-100 rounded-lg w-44"
+            onPress={onResetFilters}
+          >
+            <Ionicons name="refresh" size={16} color="#EF4444" />
+            <Text className="ml-2 text-sm font-medium text-red-600">
+              Limpiar
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Botones de filtros */}
-      <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
+      {/* <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
         <TouchableOpacity
           className="flex-row items-center px-3 py-2 mr-3 bg-blue-500 rounded-lg"
           onPress={() => setShowFiltersModal(true)}
@@ -213,79 +224,70 @@ export default memo(function OrderFiltersComponent({
           </Text>
         </TouchableOpacity>
 
-        {activeFiltersCount > 0 && (
-          <TouchableOpacity
-            className="flex-row items-center px-3 py-2 bg-red-100 rounded-lg"
-            onPress={onResetFilters}
-          >
-            <Ionicons name="refresh" size={16} color="#EF4444" />
-            <Text className="ml-2 text-sm font-medium text-red-600">
-              Limpiar
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
+       
+      </View> */}
 
       {/* Modal de filtros */}
-      <Modal
+      {/* <Modal
         visible={showFiltersModal}
         animationType="slide"
         presentationStyle="pageSheet"
-      >
-        <View className="flex-1 bg-white">
-          <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
-            <Text className="text-xl font-bold text-gray-900">Filtros</Text>
-            <TouchableOpacity onPress={() => setShowFiltersModal(false)}>
-              <Ionicons name="close" size={24} color="#6B7280" />
-            </TouchableOpacity>
-          </View>
+      > */}
 
-          <ScrollView className="flex-1 p-4">
-            {renderStatusFilter()}
-            {renderDateRangeFilter()}
-          </ScrollView>
+      <View className="flex-1 bg-white">
+        {/* <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
+          <Text className="text-xl font-bold text-gray-900">Filtros</Text>
+          <TouchableOpacity onPress={() => setShowFiltersModal(false)}>
+            <Ionicons name="close" size={24} color="#6B7280" />
+          </TouchableOpacity>
+        </View> */}
 
-          <View className="p-4 border-t border-gray-200">
-            <TouchableOpacity
-              className="py-3 bg-blue-500 rounded-lg"
-              onPress={() => setShowFiltersModal(false)}
-            >
-              <Text className="font-semibold text-center text-white">
-                Aplicar filtros
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        <ScrollView className="flex-1 p-4">
+          {renderStatusFilter()}
+          {renderDateRangeFilter()}
+        </ScrollView>
+
+        {/* <View className="p-4 border-t border-gray-200">
+          <TouchableOpacity
+            className="py-3 bg-blue-500 rounded-lg"
+            onPress={() => setShowFiltersModal(false)}
+          >
+            <Text className="font-semibold text-center text-white">
+              Aplicar filtros
+            </Text>
+          </TouchableOpacity>
+        </View> */}
+      </View>
+      {/* </Modal> */}
 
       {/* Modal de ordenamiento */}
-      <Modal
+      {/* <Modal
         visible={showSortModal}
         animationType="slide"
         presentationStyle="pageSheet"
-      >
-        <View className="flex-1 bg-white">
-          <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
-            <Text className="text-xl font-bold text-gray-900">Ordenar</Text>
-            <TouchableOpacity onPress={() => setShowSortModal(false)}>
-              <Ionicons name="close" size={24} color="#6B7280" />
-            </TouchableOpacity>
-          </View>
+      > */}
+      <View className="flex-1 bg-white">
+        {/* <View className="flex-row items-center justify-between p-4 border-b border-gray-200">
+          <Text className="text-xl font-bold text-gray-900">Ordenar</Text>
+          <TouchableOpacity onPress={() => setShowSortModal(false)}>
+            <Ionicons name="close" size={24} color="#6B7280" />
+          </TouchableOpacity>
+        </View> */}
 
-          <ScrollView className="flex-1 p-4">{renderSortOptions()}</ScrollView>
+        <ScrollView className="flex-1 p-4">{renderSortOptions()}</ScrollView>
 
-          <View className="p-4 border-t border-gray-200">
-            <TouchableOpacity
-              className="py-3 bg-blue-500 rounded-lg"
-              onPress={() => setShowSortModal(false)}
-            >
-              <Text className="font-semibold text-center text-white">
-                Aplicar ordenamiento
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        {/* <View className="p-4 border-t border-gray-200">
+          <TouchableOpacity
+            className="py-3 bg-blue-500 rounded-lg"
+            onPress={() => setShowSortModal(false)}
+          >
+            <Text className="font-semibold text-center text-white">
+              Aplicar ordenamiento
+            </Text>
+          </TouchableOpacity>
+        </View> */}
+      </View>
+      {/* </Modal> */}
     </View>
   );
 });

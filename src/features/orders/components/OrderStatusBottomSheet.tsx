@@ -23,7 +23,7 @@ export interface OrderStatusBottomSheetRef {
 const OrderStatusBottomSheet = forwardRef<
   OrderStatusBottomSheetRef,
   OrderStatusBottomSheetProps
->(({ orderStatusArray, onClose }, ref) => {
+>(({ orderStatusArray }, ref) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   // Exponer métodos para controlar el bottomsheet desde el componente padre
@@ -33,13 +33,6 @@ const OrderStatusBottomSheet = forwardRef<
     expand: () => bottomSheetRef.current?.expand(),
     collapse: () => bottomSheetRef.current?.collapse(),
   }));
-
-  const handleSheetChanges = (index: number) => {
-    // Cuando el bottom sheet se cierra completamente (index = -1)
-    if (index === -1 && onClose) {
-      onClose();
-    }
-  };
 
   const getStatusIcon = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -109,13 +102,13 @@ const OrderStatusBottomSheet = forwardRef<
     <View className="relative">
       {/* Línea de conexión */}
       {!isLast && (
-        <View className="absolute left-6 top-12 w-0.5 h-8 bg-gray-200" />
+        <View className="absolute left-[34px] top-16 w-0.5 h-16 z-0 bg-gray-200" />
       )}
 
       <View className="flex-row items-start p-4">
         {/* Icono de estado */}
         <View
-          className="items-center justify-center w-20 h-20 p-2 rounded-full"
+          className="items-center justify-center w-12 h-12 p-2 rounded-full"
           style={{ backgroundColor: `${getStatusColor(status.status)}15` }}
         >
           <Ionicons
@@ -147,10 +140,9 @@ const OrderStatusBottomSheet = forwardRef<
   return (
     <BottomSheet
       ref={bottomSheetRef}
-      index={-1} // -1 significa cerrado por defecto
-      enablePanDownToClose={true}
-      enableDynamicSizing={true}
-      onChange={handleSheetChanges}
+      enablePanDownToClose
+      snapPoints={["50%"]}
+      enableDynamicSizing={false}
       backgroundStyle={{
         backgroundColor: "#FFFFFF",
         borderRadius: 24,

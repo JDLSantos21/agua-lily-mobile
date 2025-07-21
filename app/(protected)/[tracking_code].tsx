@@ -35,7 +35,7 @@ export default function OrderDetails() {
     : tracking_code;
   const bottomSheetRef = useRef(null);
   const { data: orderInfo, isLoading, isError } = useOrderByCode(trackingCode);
-  const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const { saveLocation, isLoading: isLoadingLocation } =
     useCustomerLocation(trackingCode);
@@ -43,14 +43,9 @@ export default function OrderDetails() {
   const { mutateAsync: updateOrderStatus, isPending } =
     useUpdateOrderStatus(trackingCode);
 
-  const openStatusHistory = () => {
+  const handleSnapPress = (index: number) => {
     bottomSheetRef.current?.open();
-    setIsBottomSheetVisible(true);
-  };
-
-  const closeStatusHistory = () => {
-    bottomSheetRef.current?.close();
-    setIsBottomSheetVisible(false);
+    setIsSheetOpen(true);
   };
 
   const handleSaveLocation = async () => {
@@ -147,7 +142,7 @@ export default function OrderDetails() {
                   </Text>
                 </View>
                 <TouchableOpacity
-                  onPress={openStatusHistory}
+                  onPress={() => handleSnapPress(1)}
                   activeOpacity={0.7}
                   className="ml-4"
                 >
@@ -499,11 +494,11 @@ export default function OrderDetails() {
         </>
       )}
 
-      {isBottomSheetVisible && orderInfo && (
+      {isSheetOpen && (
         <OrderStatusBottomSheet
           ref={bottomSheetRef}
           orderStatusArray={orderInfo.data.status_history || []}
-          onClose={closeStatusHistory}
+          onClose={() => setIsSheetOpen(false)}
         />
       )}
     </View>

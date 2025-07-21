@@ -15,6 +15,9 @@ import {
   ActiveFilters,
   OrderFilters,
 } from "@/features/orders/components/filters";
+import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { useCallback, useRef, useState } from "react";
+import Button from "./ui/Button";
 
 export default function Main() {
   const {
@@ -28,6 +31,7 @@ export default function Main() {
     updateSort,
     resetFilters,
   } = useOrderFilters();
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const {
     data: orders,
@@ -38,18 +42,14 @@ export default function Main() {
     filters: serverFilters,
   });
 
-  // const sheetRef = useRef<BottomSheet>(null);
+  const sheetRef = useRef<BottomSheet>(null);
 
-  // // callbacks
-  // const handleSheetChange = useCallback((index) => {
-  //   console.log("handleSheetChange", index);
-  // }, []);
-  // const handleClosePress = useCallback(() => {
-  //   sheetRef.current?.close();
-  // }, []);
-  // const handleOpenPress = useCallback(() => {
-  //   sheetRef.current?.expand();
-  // }, []);
+  const snapPoints = ["80%"];
+
+  const handleSnapPress = useCallback((index: number) => {
+    sheetRef.current?.snapToIndex(index);
+    setIsSheetOpen(true);
+  }, []);
 
   const renderEmptyState = () => {
     const hasFilters = activeFiltersCount > 0;
@@ -84,43 +84,21 @@ export default function Main() {
 
   return (
     <ScreenLayout>
-      <View className="mb-4">
+      <View className={`mb-4`}>
         <View className="flex-row justify-between px-4 pt-4 pb-2">
-          <Text className="text-2xl font-bold text-gray-900">Pedidos</Text>
-          <Text className="mt-1 text-sm text-gray-600">
-            {orders?.data?.length || 0} pedidos
-          </Text>
-          {/* <Button
+          <View>
+            <Text className="text-2xl font-bold text-gray-900">Pedidos</Text>
+            <Text className="mt-1 text-sm text-gray-600">
+              {orders?.data?.length || 0} pedidos
+            </Text>
+          </View>
+          <Button
+            iconColor={activeFiltersCount > 0 ? "#2196f3" : "#333"}
             variant="ghost"
             icon="filter"
-            onPress={() => handleOpenPress()}
-          /> */}
+            onPress={() => handleSnapPress(0)}
+          />
         </View>
-        <OrderFilters
-          searchQuery={uiState.searchQuery}
-          selectedStatus={uiState.selectedStatus}
-          dateRange={uiState.dateRange}
-          sortBy={uiState.sortBy}
-          sortOrder={uiState.sortOrder}
-          activeFiltersCount={activeFiltersCount}
-          onUpdateSearchQuery={updateSearchQuery}
-          onExecuteSearch={executeSearch}
-          onUpdateStatus={updateStatus}
-          onUpdateDateRange={updateDateRange}
-          onUpdateSort={updateSort}
-          onResetFilters={resetFilters}
-        />
-        <ActiveFilters
-          searchQuery={uiState.searchQuery}
-          searchTerm={uiState.searchTerm}
-          selectedStatus={uiState.selectedStatus}
-          dateRange={uiState.dateRange}
-          onUpdateSearchQuery={updateSearchQuery}
-          onExecuteSearch={executeSearch}
-          onUpdateStatus={updateStatus}
-          onUpdateDateRange={updateDateRange}
-          onResetFilters={resetFilters}
-        />
       </View>
 
       {isLoading && !isError ? (
@@ -169,40 +147,43 @@ export default function Main() {
           ListEmptyComponent={renderEmptyState}
         />
       )}
-      {/* <BottomSheet
-        ref={sheetRef}
-        snapPoints={["50%"]}
-        enablePanDownToClose={true}
-        index={-1}
-        enableDynamicSizing={false}
-        onChange={handleSheetChange}
-        backgroundStyle={{
-          borderColor: "#E5E7EB",
-          shadowColor: "#000",
-          borderWidth: 2,
-          borderRadius: 24,
-        }}
-      >
-        <BottomSheetView className="flex-1">
-          <View className="flex-row justify-between px-4 py-6">
-            <View>
-              <Text className="text-xl font-bold text-gray-900">Filtros</Text>
-              <Text className="mt-2 text-sm text-gray-500">
-                Ajusta los filtros para personalizar la lista de pedidos
-              </Text>
-            </View>
-            <View>
-              <Button
-                variant="secondary"
-                icon="close"
-                onPress={handleClosePress}
-              />
-            </View>
-          </View>
-        </BottomSheetView>zz
-
-         
-      </BottomSheet> */}
+      {isSheetOpen && (
+        <BottomSheet
+          ref={sheetRef}
+          enablePanDownToClose
+          snapPoints={snapPoints}
+          enableDynamicSizing={false}
+          onClose={() => setIsSheetOpen(false)}
+        >
+          <BottomSheetScrollView>
+            <OrderFilters
+              searchQuery={uiState.searchQuery}
+              selectedStatus={uiState.selectedStatus}
+              dateRange={uiState.dateRange}
+              sortBy={uiState.sortBy}
+              sortOrder={uiState.sortOrder}
+              activeFiltersCount={activeFiltersCount}
+              onUpdateSearchQuery={updateSearchQuery}
+              onExecuteSearch={executeSearch}
+              onUpdateStatus={updateStatus}
+              onUpdateDateRange={updateDateRange}
+              onUpdateSort={updateSort}
+              onResetFilters={resetFilters}
+            />
+            <ActiveFilters
+              searchQuery={uiState.searchQuery}
+              searchTerm={uiState.searchTerm}
+              selectedStatus={uiState.selectedStatus}
+              dateRange={uiState.dateRange}
+              onUpdateSearchQuery={updateSearchQuery}
+              onExecuteSearch={executeSearch}
+              onUpdateStatus={updateStatus}
+              onUpdateDateRange={updateDateRange}
+              onResetFilters={resetFilters}
+            />
+          </BottomSheetScrollView>
+        </BottomSheet>
+      )}
     </ScreenLayout>
   );
 }

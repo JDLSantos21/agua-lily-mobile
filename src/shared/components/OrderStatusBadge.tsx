@@ -1,8 +1,22 @@
 import { Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { OrderStatus } from "@/types/orders.types";
 
-export default function OrderStatusBadge({ status }) {
-  const statusConfig = {
+export default function OrderStatusBadge({
+  status,
+  size = "md",
+}: {
+  status: OrderStatus;
+  size?: "sm" | "md";
+}) {
+  const statusConfig: {
+    [key in OrderStatus]: {
+      bg: string;
+      textColor: string;
+      icon: keyof typeof Ionicons.glyphMap;
+      iconColor: string;
+    };
+  } = {
     pendiente: {
       bg: "#FEF3C7",
       textColor: "#92400E",
@@ -12,7 +26,7 @@ export default function OrderStatusBadge({ status }) {
     preparando: {
       bg: "#DBEAFE",
       textColor: "#1E40AF",
-      icon: "restaurant-outline",
+      icon: "sync-outline",
       iconColor: "#2563EB",
     },
     despachado: {
@@ -39,7 +53,7 @@ export default function OrderStatusBadge({ status }) {
 
   return (
     <View
-      className="flex-row items-center px-4 py-3 rounded-2xl"
+      className={`flex-row items-center w-[125px] justify-center ${size === "md" ? "px-4 py-3" : "px-3 py-2"}  rounded-2xl`}
       style={{
         backgroundColor: config.bg,
         shadowColor: "#000",

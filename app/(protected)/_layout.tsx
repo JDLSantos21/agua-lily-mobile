@@ -1,7 +1,7 @@
 // app/(protected)/_layout.tsx
 import { Stack, Link, router } from "expo-router";
 import AuthGuard from "@/shared/components/AuthGuard";
-import { Image, Pressable } from "react-native";
+import { Image, Pressable, TouchableOpacity } from "react-native";
 import { User } from "lucide-react-native";
 
 import { StatusBar } from "expo-status-bar";
@@ -39,23 +39,14 @@ export default function ProtectedLayout() {
               </Link>
             ),
             headerRight: () => (
-              <Pressable
+              <TouchableOpacity
                 className="p-2 rounded-full bg-blue-100/50 active:bg-blue-200"
-                style={{
-                  width: 35,
-                  height: 35,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  zIndex: 999,
-                }}
                 onPress={() => {
-                  console.log("Profile pressed");
-                  // Navegar programáticamente
                   router.push("/profile");
                 }}
               >
                 <User size={24} color="#3B82F6" />
-              </Pressable>
+              </TouchableOpacity>
             ),
           }}
         />

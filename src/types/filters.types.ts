@@ -38,7 +38,7 @@ export interface SortOption {
 export const ORDER_STATUS_FILTERS: FilterOption<OrderStatus | undefined>[] = [
   { value: undefined, label: "Todos", icon: "list" },
   { value: "pendiente", label: "Pendientes", icon: "time" },
-  { value: "preparando", label: "Preparando", icon: "restaurant" },
+  { value: "preparando", label: "Preparando", icon: "sync-outline" },
   { value: "despachado", label: "Despachados", icon: "car" },
   { value: "entregado", label: "Entregados", icon: "checkmark-circle" },
   { value: "cancelado", label: "Cancelados", icon: "close-circle" },
