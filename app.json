@@ -46,12 +46,12 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/icons/splash-icon.png",
+          "image": "./assets/icons/splash_icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
           "dark": {
-            "image": "./assets/icons/splash-icon.png",
+            "image": "./assets/icons/splash_icon.png",
             "backgroundColor": "#000000"
           }
         }
@@ -75,9 +75,7 @@
           "color": "#ffffff"
         }
       ],
-      [
-        "expo-router"
-      ]
+      ["expo-router"]
     ],
     "extra": {
       "owner": "jdlsantos",
