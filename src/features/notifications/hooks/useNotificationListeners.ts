@@ -1,6 +1,18 @@
 import * as Notifications from "expo-notifications";
 import { useEffect, useRef } from "react";
 import { EventSubscription } from "expo-modules-core";
+import { notificationHandlerService } from "../services/notificationHandler.service";
+
+// Configure notification handler
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export function useNotificationListeners() {
   const notificationListener = useRef<EventSubscription | null>(null);
@@ -9,12 +21,13 @@ export function useNotificationListeners() {
   useEffect(() => {
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
-        console.log("📩 Notificación recibida:", notification);
+        notificationHandlerService.handleNotificationReceived(notification);
       });
 
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log("📲 Usuario respondió:", response);
+        console.log("👆 User tapped notification:");
+        notificationHandlerService.handleNotificationTapped(response);
       });
 
     return () => {

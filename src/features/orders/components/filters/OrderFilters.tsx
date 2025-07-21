@@ -50,8 +50,8 @@ export default memo(function OrderFiltersComponent({
   const renderStatusFilter = () => (
     <View className="mb-6">
       <Text className="mb-3 text-lg font-semibold text-gray-900">Estado</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View className="flex-row gap-2">
+      <ScrollView>
+        <View className="flex-row flex-wrap gap-2">
           {ORDER_STATUS_FILTERS.map((option) => (
             <TouchableOpacity
               key={option.value || "all"}

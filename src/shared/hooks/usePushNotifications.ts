@@ -3,6 +3,7 @@ import * as Notifications from "expo-notifications";
 import { EventSubscription } from "expo-modules-core";
 import { registerForPushNotificationsAsync } from "../utils/registerForPushNotificationsAsync";
 import { save } from "@/shared/utils/secureStore";
+import { notificationHandlerService } from "@/features/notifications/services/notificationHandler.service";
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -29,16 +30,13 @@ export function usePushNotifications() {
       Notifications.addNotificationReceivedListener((notification) => {
         console.log("Notification received:", notification);
         setNotification(notification);
+        notificationHandlerService.handleNotificationReceived(notification);
       });
 
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log(
-          "Notification response: el usuario interactuo con la notificación",
-          JSON.stringify(response, null, 2),
-          JSON.stringify(response.notification, null, 2)
-        );
-        // handle response notification here
+        console.log("👆 User tapped notification:");
+        notificationHandlerService.handleNotificationTapped(response);
       });
 
     return () => {

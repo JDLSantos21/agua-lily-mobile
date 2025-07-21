@@ -1,16 +1,42 @@
 import ScreenLayout from "@/shared/components/ScreenLayout";
 import { Stack } from "expo-router";
-import { Text, TouchableOpacity, View, Alert } from "react-native";
-import useNotifications from "@/shared/hooks/useNotifications";
+import { Text, TouchableOpacity, View, Alert, AppState } from "react-native";
 import { authStore } from "@/store/auth.store";
 import { registerForPushNotificationsAsync } from "@/shared/utils/registerForPushNotificationsAsync";
 import { Ionicons } from "@expo/vector-icons";
 import { openAppSettings } from "@/shared/utils/openAppSettings";
+import { useEffect, useState } from "react";
+import * as Notifications from "expo-notifications";
 
 export default function NotificationsScreen() {
-  const { notificationStatus } = useNotifications();
+  const [status, setStatus] = useState<Notifications.PermissionStatus>();
   const { user } = authStore();
-  const isEnabled = notificationStatus === "granted";
+
+  const checkPermissions = async () => {
+    const { status } = await Notifications.getPermissionsAsync();
+    setStatus(status);
+  };
+
+  useEffect(() => {
+    checkPermissions();
+
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === "active") {
+        checkPermissions();
+      }
+    };
+
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange
+    );
+
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
+
+  const isEnabled = status === "granted";
 
   const handleToggleNotifications = async () => {
     if (isEnabled) {

@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { AnimatedOrderCard } from "../../features/orders/components/OrderCard";
 import ScreenLayout from "@/shared/components/ScreenLayout";
-import { useOrdersWithNotifications } from "@/features/orders/hooks/useOrdersWithNotifications";
+
 import { useOrderFilters } from "@/features/orders/hooks/useOrderFilters";
 import { Ionicons } from "@expo/vector-icons";
 import Loading from "@/shared/components/Loading";
@@ -18,6 +18,8 @@ import {
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useCallback, useRef, useState } from "react";
 import Button from "./ui/Button";
+import OrdersError from "@/features/orders/components/OrdersError";
+import { useOrders } from "@/features/orders/hooks/useOrders";
 
 export default function Main() {
   const {
@@ -38,9 +40,7 @@ export default function Main() {
     isLoading,
     refetch,
     isError,
-  } = useOrdersWithNotifications({
-    filters: serverFilters,
-  });
+  } = useOrders(serverFilters);
 
   const sheetRef = useRef<BottomSheet>(null);
 
@@ -107,23 +107,7 @@ export default function Main() {
           message="Esto solo tomará un momento..."
         />
       ) : isError ? (
-        <View className="items-center justify-center flex-1 px-6">
-          <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-          <Text className="mt-4 text-xl font-semibold text-gray-700">
-            Ocurrió un problema
-          </Text>
-          <Text className="mt-2 text-center text-gray-500">
-            No pudimos cargar los pedidos. Verifica tu conexión e intenta
-            nuevamente.
-          </Text>
-          <TouchableOpacity
-            className="flex-row items-center px-6 py-3 mt-6 bg-blue-500 rounded-full"
-            onPress={() => refetch()}
-          >
-            <Ionicons name="refresh" size={20} color="white" />
-            <Text className="ml-2 font-medium text-white">Reintentar</Text>
-          </TouchableOpacity>
-        </View>
+        <OrdersError refetch={refetch} />
       ) : (
         <FlatList
           showsVerticalScrollIndicator={false}
@@ -146,6 +130,9 @@ export default function Main() {
           ItemSeparatorComponent={() => <View className="h-2" />}
           ListEmptyComponent={renderEmptyState}
         />
+      )}
+      {isSheetOpen && (
+        <View className="absolute top-0 h-full w-[500px] bg-black/40" />
       )}
       {isSheetOpen && (
         <BottomSheet

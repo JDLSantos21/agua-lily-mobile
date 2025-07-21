@@ -40,8 +40,8 @@ export const ORDER_STATUS_FILTERS: FilterOption<OrderStatus | undefined>[] = [
   { value: "pendiente", label: "Pendientes", icon: "time" },
   { value: "preparando", label: "Preparando", icon: "sync-outline" },
   { value: "despachado", label: "Despachados", icon: "car" },
-  { value: "entregado", label: "Entregados", icon: "checkmark-circle" },
-  { value: "cancelado", label: "Cancelados", icon: "close-circle" },
+  // { value: "entregado", label: "Entregados", icon: "checkmark-circle" },
+  // { value: "cancelado", label: "Cancelados", icon: "close-circle" },
 ];
 
 export const DATE_RANGE_FILTERS: FilterOption<DateRangeType["type"]>[] = [

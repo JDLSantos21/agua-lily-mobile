@@ -23,7 +23,7 @@ export interface OrderStatusBottomSheetRef {
 const OrderStatusBottomSheet = forwardRef<
   OrderStatusBottomSheetRef,
   OrderStatusBottomSheetProps
->(({ orderStatusArray }, ref) => {
+>(({ orderStatusArray, onClose }, ref) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   // Exponer métodos para controlar el bottomsheet desde el componente padre
@@ -140,6 +140,7 @@ const OrderStatusBottomSheet = forwardRef<
   return (
     <BottomSheet
       ref={bottomSheetRef}
+      onClose={onClose}
       enablePanDownToClose
       snapPoints={["50%"]}
       enableDynamicSizing={false}

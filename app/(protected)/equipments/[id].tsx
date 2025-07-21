@@ -20,7 +20,14 @@ import {
   Settings,
   User,
 } from "lucide-react-native";
-import { View, Text, ScrollView, Linking, RefreshControl } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Linking,
+  RefreshControl,
+  Alert,
+} from "react-native";
 import EquipmentError from "@/features/equipments/components/EquipmentError";
 import EquipmentNotFound from "@/features/equipments/components/EquipmentNotFound";
 import formatDate from "@/shared/utils/format-date";
@@ -44,9 +51,25 @@ export default function EquipmentDetails() {
   };
 
   const handleSaveLocation = async () => {
-    if (equipmentId) {
-      await saveLocation(equipmentId);
-    }
+    Alert.alert(
+      "Guardar ubicación",
+      "¿Deseas guardar la ubicación GPS actual como dirección exacta del equipo? Esta acción actualizará la ubicación del equipo y la guardará en el sistema.",
+      [
+        { text: "Cancelar", style: "destructive" },
+        {
+          text: "Guardar",
+          style: "default",
+          onPress: async () => {
+            if (equipmentId) {
+              await saveLocation(equipmentId);
+            }
+          },
+        },
+      ],
+      {
+        cancelable: true,
+      }
+    );
   };
 
   return (

@@ -20,11 +20,19 @@ export async function getOrders(filters?: OrderFilters) {
   }
 
   const queryString = params.toString();
-  const url = queryString ? `/orders?${queryString}` : "/orders?limit=15";
+  const url = queryString
+    ? `/orders/pending?${queryString}`
+    : "/orders/pending?limit=15";
 
   return await api.get(url).then((r) => {
     return r.data;
   });
+}
+
+export async function getLastOrders(limit: number = 10) {
+  return await api
+    .get(`/orders?order_status=entregado&limit=${limit}`)
+    .then((r) => r.data);
 }
 
 interface GetOrderByCodeResponse {

@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Alert,
   Linking,
+  RefreshControl,
 } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
@@ -34,7 +35,12 @@ export default function OrderDetails() {
     ? tracking_code[0]
     : tracking_code;
   const bottomSheetRef = useRef(null);
-  const { data: orderInfo, isLoading, isError } = useOrderByCode(trackingCode);
+  const {
+    data: orderInfo,
+    refetch,
+    isLoading,
+    isError,
+  } = useOrderByCode(trackingCode);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const { saveLocation, isLoading: isLoadingLocation } =
@@ -43,15 +49,27 @@ export default function OrderDetails() {
   const { mutateAsync: updateOrderStatus, isPending } =
     useUpdateOrderStatus(trackingCode);
 
-  const handleSnapPress = (index: number) => {
+  const handleSnapPress = () => {
     bottomSheetRef.current?.open();
     setIsSheetOpen(true);
   };
 
   const handleSaveLocation = async () => {
-    if (orderInfo?.data?.customer_id) {
-      await saveLocation(orderInfo.data.customer_id);
-    }
+    Alert.alert(
+      "Guardar ubicación",
+      "¿Deseas guardar la ubicación GPS actual como dirección exacta del cliente?",
+      [
+        { text: "Cancelar", style: "destructive" },
+        {
+          text: "Guardar",
+          style: "default",
+          onPress: async () => {
+            await saveLocation(orderInfo.data.customer_id);
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   const handleGoToLocation = () => {
@@ -129,6 +147,13 @@ export default function OrderDetails() {
             className="flex-1"
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 20 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={isLoading}
+                onRefresh={refetch}
+                colors={["#3B82F6"]}
+              />
+            }
           >
             {/* Status y Fecha - Diseño más destacado */}
             <View className="mx-4 mt-6 mb-8">
@@ -142,7 +167,7 @@ export default function OrderDetails() {
                   </Text>
                 </View>
                 <TouchableOpacity
-                  onPress={() => handleSnapPress(1)}
+                  onPress={() => handleSnapPress()}
                   activeOpacity={0.7}
                   className="ml-4"
                 >
@@ -492,6 +517,10 @@ export default function OrderDetails() {
             />
           )}
         </>
+      )}
+
+      {isSheetOpen && (
+        <View className="absolute top-0 h-full w-[500px] bg-black/40" />
       )}
 
       {isSheetOpen && (
