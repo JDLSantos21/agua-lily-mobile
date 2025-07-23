@@ -52,8 +52,10 @@ export const authStore = create<AuthState>()(
         try {
           const { data } = await refreshApi(rt);
           await save("access", data.access_token);
+          await save("refresh", data.refresh_token);
           set({
             accessToken: data.access_token,
+            refreshToken: data.refresh_token,
           });
         } catch (error) {
           if (error.response.status === 401) {

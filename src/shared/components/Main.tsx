@@ -4,9 +4,15 @@ import {
   Text,
   RefreshControl,
   TouchableOpacity,
+  // Animated,
 } from "react-native";
 import { AnimatedOrderCard } from "../../features/orders/components/OrderCard";
 import ScreenLayout from "@/shared/components/ScreenLayout";
+import Animated, {
+  runOnJS,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
 import { useOrderFilters } from "@/features/orders/hooks/useOrderFilters";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,7 +22,7 @@ import {
   OrderFilters,
 } from "@/features/orders/components/filters";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
-import { useCallback, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Button from "./ui/Button";
 import OrdersError from "@/features/orders/components/OrdersError";
 import { useOrders } from "@/features/orders/hooks/useOrders";
@@ -42,14 +48,23 @@ export default function Main() {
     isError,
   } = useOrders(serverFilters);
 
+  const opacity = useSharedValue(0);
+
   const sheetRef = useRef<BottomSheet>(null);
 
-  const snapPoints = ["80%"];
+  const snapPoints = useMemo(() => ["80%"], []);
 
-  const handleSnapPress = useCallback((index: number) => {
+  const handleSnapPress = (index: number) => {
     sheetRef.current?.snapToIndex(index);
     setIsSheetOpen(true);
-  }, []);
+    opacity.value = withTiming(1, { duration: 300 });
+  };
+
+  const handleCloseSheet = () => {
+    opacity.value = withTiming(0, { duration: 200 }, () =>
+      runOnJS(setIsSheetOpen)(false)
+    );
+  };
 
   const renderEmptyState = () => {
     const hasFilters = activeFiltersCount > 0;
@@ -132,7 +147,14 @@ export default function Main() {
         />
       )}
       {isSheetOpen && (
-        <View className="absolute top-0 h-full w-[500px] bg-black/40" />
+        <Animated.View
+          pointerEvents="auto"
+          style={{
+            opacity,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+          }}
+          className="absolute top-0 h-full w-[500px]"
+        />
       )}
       {isSheetOpen && (
         <BottomSheet
@@ -140,7 +162,7 @@ export default function Main() {
           enablePanDownToClose
           snapPoints={snapPoints}
           enableDynamicSizing={false}
-          onClose={() => setIsSheetOpen(false)}
+          onClose={() => handleCloseSheet()}
         >
           <BottomSheetScrollView>
             <OrderFilters

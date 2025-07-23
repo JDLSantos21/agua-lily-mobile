@@ -10,9 +10,5 @@ export default function HomeTab() {
   useRegisterPushToken(userId);
   useNotificationListeners();
 
-  return (
-    <>
-      <Main />
-    </>
-  );
+  return <Main />;
 }

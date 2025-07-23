@@ -48,6 +48,8 @@ api.interceptors.response.use(
       });
     }
 
+    console.log("API error:", error, error.response?.data);
+
     return Promise.reject(error);
   }
 );

@@ -26,6 +26,11 @@ import { useCustomerLocation } from "@/features/customers/hooks/useCustomerLocat
 import OrderStatusBottomSheet from "@/features/orders/components/OrderStatusBottomSheet";
 import Button from "@/shared/components/ui/Button";
 import formatDate from "@/shared/utils/format-date";
+import Animated, {
+  runOnJS,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
 dayjs.locale(es); // Configurar el locale a español
 
@@ -49,9 +54,18 @@ export default function OrderDetails() {
   const { mutateAsync: updateOrderStatus, isPending } =
     useUpdateOrderStatus(trackingCode);
 
+  const opacity = useSharedValue(0);
+
   const handleSnapPress = () => {
     bottomSheetRef.current?.open();
     setIsSheetOpen(true);
+    opacity.value = withTiming(1, { duration: 300 });
+  };
+
+  const handleCloseSheet = () => {
+    opacity.value = withTiming(0, { duration: 200 }, () =>
+      runOnJS(setIsSheetOpen)(false)
+    );
   };
 
   const handleSaveLocation = async () => {
@@ -520,14 +534,17 @@ export default function OrderDetails() {
       )}
 
       {isSheetOpen && (
-        <View className="absolute top-0 h-full w-[500px] bg-black/40" />
+        <Animated.View
+          style={{ opacity }}
+          className="absolute top-0 h-full w-[500px] bg-black/40"
+        />
       )}
 
       {isSheetOpen && (
         <OrderStatusBottomSheet
           ref={bottomSheetRef}
           orderStatusArray={orderInfo.data.status_history || []}
-          onClose={() => setIsSheetOpen(false)}
+          onClose={handleCloseSheet}
         />
       )}
     </View>
