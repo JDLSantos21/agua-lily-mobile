@@ -8,6 +8,11 @@ export default function ScreenLayout({
   className?: string;
 }) {
   return (
-    <View className={`flex-1 px-5 bg-white ${className}`}>{children}</View>
+    <View
+      style={{ flex: 1, paddingHorizontal: 20 }}
+      className={`${className ? className : "bg-white"}`}
+    >
+      {children}
+    </View>
   );
 }

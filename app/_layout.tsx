@@ -5,9 +5,10 @@ import { Slot } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useRef } from "react";
+import React, { useRef } from "react";
 import { useFonts } from "expo-font";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AlertProvider, AlertComponent } from "@/shared/components/ui/Alert";
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -29,12 +30,17 @@ export default function RootLayout() {
   if (!loaded) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, paddingBottom: insets.bottom }}>
-      <BottomSheetModalProvider>
-        <QueryClientProvider client={queryClient}>
-          <Slot />
-        </QueryClientProvider>
-      </BottomSheetModalProvider>
-    </GestureHandlerRootView>
+    <React.StrictMode>
+      <GestureHandlerRootView style={{ flex: 1, paddingBottom: insets.bottom }}>
+        <BottomSheetModalProvider>
+          <QueryClientProvider client={queryClient}>
+            <AlertProvider>
+              <Slot />
+              <AlertComponent />
+            </AlertProvider>
+          </QueryClientProvider>
+        </BottomSheetModalProvider>
+      </GestureHandlerRootView>
+    </React.StrictMode>
   );
 }

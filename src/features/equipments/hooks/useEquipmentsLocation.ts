@@ -1,32 +1,36 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { saveEquipmentLocation } from "../services/equipments.service";
-import { Alert } from "react-native";
+import { useAlert } from "@/shared/components/ui/Alert";
+import { useUpdateEquipmentLocation } from "./useEquipments";
 
 export function useEquipmentsLocation() {
+  const alert = useAlert();
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const queryClient = useQueryClient();
+  const { mutateAsync: updateLocation } = useUpdateEquipmentLocation();
+  // const QueryClient = useQueryClient();
 
-  const saveLocation = async (id: number) => {
+  const saveLocation = async (
+    id: number,
+    latitude: number,
+    longitude: number
+  ) => {
     try {
       setIsGettingLocation(true);
       setIsSaving(true);
 
-      await saveEquipmentLocation(id);
+      await updateLocation({ id, latitude, longitude });
 
-      Alert.alert(
+      // QueryClient.invalidateQueries({ queryKey: ["equipment", String(id)] });
+
+      alert.success(
         "Ubicación guardada",
         "La ubicación del equipo se ha actualizado correctamente."
       );
-
-      queryClient.invalidateQueries({ queryKey: ["equipment", id] });
     } catch (error: any) {
       console.log("Error al guardar la ubicación del equipo:", error);
-      Alert.alert(
-        "Ocurrió un problema",
-        error.message ||
-          "No se pudo guardar la ubicación del equipo. Inténtalo de nuevo más tarde."
+      alert.error(
+        "Ocurrió un error al guardar ubicación",
+        "No se pudo guardar la ubicación del equipo. Inténtalo de nuevo más tarde."
       );
     } finally {
       setIsGettingLocation(false);

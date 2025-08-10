@@ -7,3 +7,12 @@ export const rawApi = axios.create({
 
 export const refreshApi = (refreshToken: string) =>
   rawApi.post("/auth/refresh", { refresh_token: refreshToken });
+
+export const loginApi = (username: string, password: string) =>
+  rawApi.post("/auth/login", {
+    username,
+    password,
+  });
+
+export const logoutApi = (refresh_token: string) =>
+  rawApi.post("/auth/logout", { refresh_token });

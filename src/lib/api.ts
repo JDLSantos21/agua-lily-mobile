@@ -1,6 +1,6 @@
 // src/services/api.ts
 import axios, { AxiosError } from "axios";
-import { authStore } from "@/store/auth.store";
+import { authService } from "@/features/auth/services/auth.service";
 
 export const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL,
@@ -8,13 +8,13 @@ export const api = axios.create({
 });
 
 /* ---------- request: añade access token ---------- */
-api.interceptors.request.use((config) => {
-  const token = authStore.getState().accessToken;
+api.interceptors.request.use(async (config) => {
+  const token = await authService.getAccessToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-let refreshPromise: Promise<string> | null = null;
+let refreshPromise: Promise<void> | null = null;
 
 api.interceptors.response.use(
   (r) => r,
@@ -32,24 +32,19 @@ api.interceptors.response.use(
 
       // si ya hay un refresh en curso reutilízalo
       if (!refreshPromise) {
-        refreshPromise = authStore
-          .getState()
-          .refresh() // POST /auth/refresh
-          .then(() => authStore.getState().accessToken as string)
-          .finally(() => {
-            refreshPromise = null; // se limpia al terminar
-          });
+        refreshPromise = authService.refresh().finally(() => {
+          refreshPromise = null; // se limpia al terminar
+        });
       }
 
-      // esperamos al refresh (sea propio o ajeno) y repetimos el request
-      return refreshPromise.then((newToken) => {
+      return refreshPromise.then(async () => {
+        const newToken = await authService.getAccessToken();
         original.headers.Authorization = `Bearer ${newToken}`;
         return api(original);
       });
     }
 
     console.log("API error:", error, error.response?.data);
-
     return Promise.reject(error);
   }
 );

@@ -30,6 +30,7 @@ export default function History() {
           keyExtractor={(item) => item.tracking_code}
           renderItem={({ item }) => <OrderCard order={item} />}
           contentContainerStyle={{ paddingBottom: 20 }}
+          ItemSeparatorComponent={() => <View className="h-2" />}
           refreshControl={
             <RefreshControl
               refreshing={isLoading}

@@ -1,81 +1,106 @@
-// import { del, get, save } from "@/shared/utils/secureStore";
-// import { loginApi, logoutApi } from "./auth.api";
-// import { tokenManager } from "../utils/tokenManager";
-// import { authStore } from "@/store/auth.store";
-// import { deactivatePushToken } from "@/features/notifications/api/registerToken.api";
-// import { refreshApi } from "./refresh.api";
-
 import { authStore } from "@/store/auth.store";
-import { loginApi } from "./auth.api";
+import { loginApi, logoutApi, refreshApi } from "./auth.api";
+import { save, get, del } from "@/shared/utils/secureStore";
+import { deactivatePushToken } from "@/features/notifications/api/registerToken.api";
 
-// export const login = async (username: string, password: string) => {
-//   const { data } = await loginApi(username, password);
-//   console.log("login: ", data);
-//   await save("access", data.access_token);
-//   await save("refresh", data.refresh_token);
-//   tokenManager.set(data.access_token);
+class AuthService {
+  async login(username: string, password: string) {
+    try {
+      const { data } = await loginApi(username, password);
 
-//   authStore.setState({
-//     user: {
-//       id: data.id,
-//       name: data.name,
-//       role: data.role,
-//     },
-//     accessToken: data.access_token,
-//     refreshToken: data.refresh_token,
-//   });
-// };
+      await save("access", data.access_token);
+      await save("refresh", data.refresh_token);
 
-// export const refresh = async () => {
-//   const refreshToken = await get("refresh");
-//   if (!refreshToken) throw new Error("No refresh token available");
+      authStore.getState().setUser({
+        id: data.id,
+        name: data.name,
+        role: data.role,
+      });
 
-//   try {
-//     const { data } = await refreshApi(refreshToken);
-//     await save("access", data.access_token);
-//     await save("access", data.refresh_token);
-//     tokenManager.set(data.access_token);
-//     authStore.setState({
-//       accessToken: data.access_token,
-//       refreshToken: data.refresh_token,
-//     });
+      console.log("login success: ", data);
+    } catch (error) {
+      console.log("Login failed: ", error);
+      throw error;
+    }
+  }
 
-//     console.log("refresh: ", data);
-//     return data.access_token;
-//   } catch (error) {
-//     if (error.response.status === 401) {
-//       await del("access");
-//       await del("refresh");
-//       authStore.setState({
-//         user: null,
-//         accessToken: null,
-//         refreshToken: null,
-//       });
+  async refresh() {
+    try {
+      const refreshToken = await get("refresh");
+      if (!refreshToken) {
+        console.warn("No refresh token available, cannot refresh session.");
+        throw new Error("No refresh token available");
+      }
 
-//       console.log("fallo el token refresh", error);
-//     }
-//   }
-// };
+      const { data } = await refreshApi(refreshToken);
 
-// export const logout = async () => {
-//   try {
-//     const pushToken = await get("pushToken");
-//     const refreshToken = await get("refresh");
-//     if (pushToken) await deactivatePushToken(pushToken);
-//     await logoutApi(refreshToken);
-//   } catch {
-//     return false;
-//   }
+      await save("access", data.access_token);
+      await save("refresh", data.refresh_token);
+    } catch (error) {
+      if (error?.response?.status === 401) {
+        await this.clearSession();
+      }
+      throw error;
+    }
+  }
 
-//   tokenManager.clear();
-//   await del("access");
-//   await del("refresh");
-//   await del("pushToken");
-//   authStore.setState({
-//     user: null,
-//     accessToken: null,
-//     refreshToken: null,
-//   });
+  async logout() {
+    try {
+      const refreshToken = await get("refresh");
+      const pushToken = await get("pushToken");
 
-//   return true;
-// };
+      if (pushToken) {
+        await deactivatePushToken(pushToken);
+      }
+
+      if (refreshToken) {
+        await logoutApi(refreshToken);
+      }
+
+      await this.clearSession();
+
+      return true;
+    } catch (error) {
+      console.log("Logout failed: ", error);
+      await this.clearSession();
+      return false;
+    }
+  }
+
+  async clearSession() {
+    await del("access");
+    await del("refresh");
+    await del("pushToken");
+
+    authStore.getState().clearAuth();
+  }
+
+  async getAccessToken() {
+    return await get("access");
+  }
+
+  async getRefreshToken() {
+    return await get("refresh");
+  }
+
+  async initializeAuth() {
+    try {
+      const accessToken = await this.getAccessToken();
+      const refreshToken = await this.getRefreshToken();
+
+      if (accessToken && refreshToken) {
+        try {
+          await this.refresh();
+        } catch (error) {
+          console.log("Failed to refresh token, clearing session: ", error);
+          await this.clearSession();
+        }
+      }
+    } catch (error) {
+      console.log("Error initializing auth: ", error);
+      await this.clearSession();
+    }
+  }
+}
+
+export const authService = new AuthService();

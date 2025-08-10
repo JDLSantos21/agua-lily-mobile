@@ -56,7 +56,7 @@ export async function updateOrderStatus(
     })
     .then((r) => r.data)
     .catch((error) => {
-      console.error("Error updating order status:", error);
+      console.log("Error updating order status:", error);
       return null;
     });
 }

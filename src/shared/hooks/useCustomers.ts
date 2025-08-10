@@ -25,7 +25,7 @@ export function useUpdateCustomerLocation(
       queryClient.invalidateQueries({ queryKey: ["customer", id] });
     },
     onError: (error) => {
-      console.error("Error updating customer location:", error);
+      console.log("Error updating customer location:", error);
     },
   });
 }

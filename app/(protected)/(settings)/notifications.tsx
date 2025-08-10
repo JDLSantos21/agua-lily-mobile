@@ -1,15 +1,17 @@
 import ScreenLayout from "@/shared/components/ScreenLayout";
 import { Stack } from "expo-router";
-import { Text, TouchableOpacity, View, Alert, AppState } from "react-native";
+import { Text, TouchableOpacity, View, AppState } from "react-native";
 import { authStore } from "@/store/auth.store";
 import { registerForPushNotificationsAsync } from "@/shared/utils/registerForPushNotificationsAsync";
 import { Ionicons } from "@expo/vector-icons";
 import { openAppSettings } from "@/shared/utils/openAppSettings";
 import { useEffect, useState } from "react";
 import * as Notifications from "expo-notifications";
+import { useAlert } from "@/shared/components/ui/Alert";
 
 export default function NotificationsScreen() {
   const [status, setStatus] = useState<Notifications.PermissionStatus>();
+  const alert = useAlert();
   const { user } = authStore();
 
   const checkPermissions = async () => {
@@ -40,33 +42,19 @@ export default function NotificationsScreen() {
 
   const handleToggleNotifications = async () => {
     if (isEnabled) {
-      Alert.alert(
+      alert.confirm(
         "Desactivar notificaciones",
         "¿Deseas ir a la configuración para desactivar las notificaciones?",
-        [
-          { text: "Cancelar", style: "cancel" },
-          {
-            text: "Ir a Configuración",
-            style: "default",
-            onPress: openAppSettings,
-          },
-        ]
+        openAppSettings
       );
     } else {
       try {
         await registerForPushNotificationsAsync(user.id);
       } catch {
-        Alert.alert(
-          "Error",
+        alert.error(
+          "Ocurrió un error",
           "No se pudieron activar las notificaciones. ¿Deseas ir a la configuración para activarlas manualmente?",
-          [
-            { text: "Cancelar", style: "cancel" },
-            {
-              text: "Ir a Configuración",
-              style: "default",
-              onPress: openAppSettings,
-            },
-          ]
+          openAppSettings
         );
       }
     }

@@ -3,7 +3,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Linking,
   RefreshControl,
 } from "react-native";
@@ -31,6 +30,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { useAlert } from "@/shared/components/ui/Alert";
 
 dayjs.locale(es); // Configurar el locale a español
 
@@ -47,7 +47,7 @@ export default function OrderDetails() {
     isError,
   } = useOrderByCode(trackingCode);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-
+  const alert = useAlert();
   const { saveLocation, isLoading: isLoadingLocation } =
     useCustomerLocation(trackingCode);
 
@@ -69,20 +69,13 @@ export default function OrderDetails() {
   };
 
   const handleSaveLocation = async () => {
-    Alert.alert(
+    const confirmSave = async () =>
+      await saveLocation(orderInfo.data.customer_id);
+
+    alert.confirm(
       "Guardar ubicación",
       "¿Deseas guardar la ubicación GPS actual como dirección exacta del cliente?",
-      [
-        { text: "Cancelar", style: "destructive" },
-        {
-          text: "Guardar",
-          style: "default",
-          onPress: async () => {
-            await saveLocation(orderInfo.data.customer_id);
-          },
-        },
-      ],
-      { cancelable: true }
+      confirmSave
     );
   };
 
@@ -94,38 +87,33 @@ export default function OrderDetails() {
   };
 
   const handleMarkAsDelivered = () => {
-    Alert.alert(
+    const confirm = async () => {
+      try {
+        await updateOrderStatus({
+          orderId: orderInfo.data.id,
+          data: {
+            status: "entregado",
+            notes: "Pedido completado por conductor.",
+          },
+        });
+
+        alert.success(
+          "Éxito",
+          "El pedido ha sido marcado como entregado correctamente."
+        );
+      } catch (error) {
+        console.log("Error al marcar como entregado:", error);
+        alert.error(
+          "Ocurrió un problema",
+          "No se pudo marcar el pedido como entregado. Inténtalo más tarde."
+        );
+      }
+    };
+
+    alert.confirm(
       "Confirmar entrega",
       "¿Estás seguro de que quieres marcar este pedido como entregado?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Confirmar",
-          style: "default",
-          onPress: async () => {
-            try {
-              await updateOrderStatus({
-                orderId: orderInfo.data.id,
-                data: {
-                  status: "entregado",
-                  notes: "Pedido completado por conductor.",
-                },
-              });
-
-              Alert.alert(
-                "Éxito",
-                "El pedido ha sido marcado como entregado correctamente."
-              );
-            } catch (error) {
-              console.log("Error al marcar como entregado:", error);
-              Alert.alert(
-                "Ocurrió un problema",
-                "No se pudo marcar el pedido como entregado. Inténtalo más tarde."
-              );
-            }
-          },
-        },
-      ]
+      confirm
     );
   };
 

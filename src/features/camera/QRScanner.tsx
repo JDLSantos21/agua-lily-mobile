@@ -1,7 +1,7 @@
 import Button from "@/shared/components/ui/Button";
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import { useState } from "react";
-import { Text, View, TouchableOpacity } from "react-native";
+import { Text, View, TouchableOpacity, Modal as RNModal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -9,9 +9,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 interface QRScannerProps {
   onCodeScanned?: (data: string) => void;
   onClose?: () => void;
+  visible?: boolean;
 }
 
-export default function QRScanner({ onCodeScanned, onClose }: QRScannerProps) {
+export default function QRScanner({
+  onCodeScanned,
+  onClose,
+  visible = false,
+}: QRScannerProps) {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
   const insets = useSafeAreaInsets();
@@ -20,63 +25,64 @@ export default function QRScanner({ onCodeScanned, onClose }: QRScannerProps) {
     return <View />;
   }
 
-  if (!permission.granted) {
+  const CameraContent = () => {
+    if (!permission.granted) {
+      return (
+        <View className="items-center flex-1 w-full h-full bg-gray-900">
+          <StatusBar style="light" />
+
+          {/* Header con botón cerrar */}
+          <View
+            style={{ marginTop: insets.top + 10 }}
+            className="absolute z-10 flex-row items-center justify-between flex-1 w-full px-4"
+          >
+            <TouchableOpacity
+              onPress={() => setFacing(facing === "back" ? "front" : "back")}
+              className="items-center justify-center w-10 h-10 rounded-full"
+            >
+              <Ionicons name="camera-reverse" size={32} color="white" />
+            </TouchableOpacity>
+
+            <Text className="text-xl font-semibold text-white">Escáner QR</Text>
+
+            <TouchableOpacity
+              onPress={onClose}
+              className="items-center justify-center w-10 h-10 rounded-full"
+            >
+              <Ionicons name="close" size={32} color="white" />
+            </TouchableOpacity>
+          </View>
+
+          <View className="items-center justify-center flex-1 px-6">
+            <View className="items-center justify-center w-20 h-20 mb-6 rounded-full bg-white/10">
+              <Ionicons name="camera" size={32} color="white" />
+            </View>
+            <Text className="mb-2 text-xl font-semibold text-center text-white">
+              Permiso de cámara requerido
+            </Text>
+            <Text className="mb-6 text-center text-gray-300">
+              Necesitamos acceso a tu cámara para escanear códigos QR
+            </Text>
+            <Button
+              onPress={requestPermission}
+              text="Permitir acceso a la cámara"
+              variant="primary"
+            />
+          </View>
+        </View>
+      );
+    }
+
     return (
-      <View className="items-center flex-1 bg-gray-900">
+      <View className="flex-1 w-full h-full">
         <StatusBar style="light" />
 
-        {/* Header con botón cerrar */}
-        <View
-          style={{ marginTop: insets.top + 10 }}
-          className="absolute z-10 flex-row items-center justify-between flex-1 w-full px-4"
-        >
-          <TouchableOpacity
-            onPress={() => setFacing(facing === "back" ? "front" : "back")}
-            className="items-center justify-center w-10 h-10 rounded-full"
-          >
-            <Ionicons name="camera-reverse" size={32} color="white" />
-          </TouchableOpacity>
-
-          <Text className="text-xl font-semibold text-white">Escáner QR</Text>
-
-          <TouchableOpacity
-            onPress={onClose}
-            className="items-center justify-center w-10 h-10 rounded-full"
-          >
-            <Ionicons name="close" size={32} color="white" />
-          </TouchableOpacity>
-        </View>
-
-        <View className="items-center justify-center flex-1 px-6">
-          <View className="items-center justify-center w-20 h-20 mb-6 rounded-full bg-white/10">
-            <Ionicons name="camera" size={32} color="white" />
-          </View>
-          <Text className="mb-2 text-xl font-semibold text-center text-white">
-            Permiso de cámara requerido
-          </Text>
-          <Text className="mb-6 text-center text-gray-300">
-            Necesitamos acceso a tu cámara para escanear códigos QR
-          </Text>
-          <Button
-            onPress={requestPermission}
-            text="Permitir acceso a la cámara"
-            variant="primary"
-          />
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <View className="flex-1 bg-black">
-      <StatusBar style="light" />
-
-      <CameraView
-        style={{ flex: 1 }}
-        facing={facing}
-        barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-        onBarcodeScanned={({ data }) => onCodeScanned?.(data)}
-      >
+        <CameraView
+          style={{ flex: 1 }}
+          facing={facing}
+          barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+          onBarcodeScanned={({ data }) => onCodeScanned?.(data)}
+        />
         <View className="absolute z-10 items-center justify-between flex-1 w-full h-full px-4">
           {/* Header con botón cerrar */}
           <View
@@ -120,7 +126,6 @@ export default function QRScanner({ onCodeScanned, onClose }: QRScannerProps) {
                 <View className="absolute border border-dashed inset-8 border-white/30 rounded-2xl" />
               </View>
 
-              {/* Texto de instrucción con mejor diseño */}
               <View className="absolute left-0 right-0 px-4 -bottom-16">
                 <Text className="mt-2 text-sm text-center text-gray-300">
                   Mantén el dispositivo estable para un mejor escaneo
@@ -145,7 +150,23 @@ export default function QRScanner({ onCodeScanned, onClose }: QRScannerProps) {
             </View>
           </View>
         </View>
-      </CameraView>
-    </View>
+      </View>
+    );
+  };
+
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <RNModal
+      statusBarTranslucent
+      visible={visible}
+      presentationStyle="fullScreen"
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <CameraContent />
+    </RNModal>
   );
 }

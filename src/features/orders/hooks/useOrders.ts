@@ -48,7 +48,7 @@ export function useUpdateOrderStatus(tracking_code: string) {
       queryClient.invalidateQueries({ queryKey: ["lastOrders"] });
     },
     onError: (error) => {
-      console.error("Error updating order status:", error);
+      console.log("Error updating order status:", error);
     },
   });
 }

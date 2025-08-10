@@ -1,24 +1,21 @@
 import EquipmentCard from "@/features/equipments/components/equipmentCard";
-import { useEquipments } from "@/features/equipments/hooks/useEquipments";
+import { useMobileEquipments } from "@/features/equipments/hooks/useEquipments";
 import Loading from "@/shared/components/Loading";
 import Button from "@/shared/components/ui/Button";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  FlatList,
-  Pressable,
-  RefreshControl,
-  Text,
-  View,
-  Modal,
-  Alert,
-} from "react-native";
+import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 import EquipmentsListError from "../../../src/features/equipments/components/EquipmentsListError";
 import QRScanner from "@/features/camera/QRScanner";
 import { useState } from "react";
 import { router } from "expo-router";
 
 export default function EquipmentsScreen() {
-  const { data: equipments, isLoading, isError, refetch } = useEquipments();
+  const {
+    data: equipments,
+    isLoading,
+    isError,
+    refetch,
+  } = useMobileEquipments();
   const [showQRScanner, setShowQRScanner] = useState(false);
 
   if (isLoading && !isError) {
@@ -36,11 +33,8 @@ export default function EquipmentsScreen() {
 
   const handleQRScan = (data: string) => {
     setShowQRScanner(false);
+    console.log("QR Code scanned:", data);
     if (!data) return;
-    if (isNaN(Number(data))) {
-      Alert.alert("Código QR inválido");
-      return;
-    }
     router.push(`/equipments/${data}`);
   };
 
@@ -70,32 +64,27 @@ export default function EquipmentsScreen() {
           </View>
 
           {/* Badge indicador activo */}
-          <View className="absolute items-center justify-center w-5 h-5 bg-green-400 border-2 border-white rounded-full -top-1 -right-1">
-            <View className="w-2 h-2 bg-white rounded-full" />
+          <View className="absolute top-0 right-0 items-center justify-center w-4 h-4 bg-green-400 border border-white rounded-full">
+            <View className="z-10 w-2 h-2 bg-white rounded-full" />
           </View>
 
           {/* Efecto de resplandor */}
           <View
             className="absolute inset-0 rounded-full bg-blue-400/20"
             style={{
-              transform: [{ scale: 1.3 }],
+              transform: [{ scale: 1.1 }],
             }}
           />
         </View>
       </Pressable>
 
       {/* Modal del QR Scanner */}
-      <Modal
+
+      <QRScanner
         visible={showQRScanner}
-        animationType="slide"
-        presentationStyle="fullScreen"
-        statusBarTranslucent
-      >
-        <QRScanner
-          onCodeScanned={handleQRScan}
-          onClose={() => setShowQRScanner(false)}
-        />
-      </Modal>
+        onCodeScanned={handleQRScan}
+        onClose={() => setShowQRScanner(false)}
+      />
       {/* Header */}
       <View className="px-4 pt-6 pb-4 bg-white border-b border-gray-100">
         <View className="flex-row items-center justify-between">

@@ -1,36 +1,31 @@
 import { authStore } from "@/store/auth.store";
-import { useRouter } from "expo-router";
-import { useCallback } from "react";
+import { useEffect } from "react";
+import { authService } from "../services/auth.service";
+import { router } from "expo-router";
 
 export function useAuth() {
-  const { user, accessToken, login, logout, refresh } = authStore();
+  const { user, isAuthenticated } = authStore();
 
-  const router = useRouter();
+  useEffect(() => {
+    authService.initializeAuth();
+  }, []);
 
-  const signIn = useCallback(
-    async (username: string, password: string) => {
-      await login(username, password);
-      router.push("/");
-    },
-    [login, router]
-  );
+  const login = async (username: string, password: string) => {
+    await authService.login(username, password);
+    router.replace("/");
+  };
 
-  const signOut = useCallback(async () => {
-    const success = await logout();
+  const logout = async () => await authService.logout();
 
-    if (!success) {
-      console.error("Logout failed");
-      return;
-    }
-
-    router.push("/login");
-  }, [logout, router]);
+  const refresh = async () => {
+    await authService.refresh();
+  };
 
   return {
     user,
-    accessToken,
-    signIn,
-    signOut,
+    isAuthenticated,
+    login,
+    logout,
     refresh,
   };
 }

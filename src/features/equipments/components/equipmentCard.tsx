@@ -102,6 +102,14 @@ export default function EquipmentCard({
                 )}
               </View>
             )}
+            {equipment.require_gps_update === 1 ? (
+              <View className="flex-row items-center px-3 py-2 mt-2 border border-blue-200 rounded-lg bg-blue-50">
+                <Ionicons name="information-circle" size={16} color="#1D4ED8" />
+                <Text className="flex-1 ml-2 text-sm text-blue-700">
+                  Se requiere actualización de la ubicación GPS
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
       </TouchableOpacity>

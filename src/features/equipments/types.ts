@@ -10,12 +10,15 @@ export interface Equipment {
   contract_details: any;
   customer_address: string;
   status: string;
+  show_in_mobile: boolean;
+  require_gps_update: 0 | 1;
   last_maintenance_date: string;
   notes: any;
   latitude: number;
   longitude: number;
   location_created_at: string;
-  assigned_date: string;
+  assigned_date: string | null;
+  delivered_date: string | null;
   created_at: string;
   updated_at: string;
   customer_name: string;

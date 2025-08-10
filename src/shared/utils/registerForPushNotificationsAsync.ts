@@ -82,7 +82,7 @@ export async function registerForPushNotificationsAsync(userId: string) {
       registerPushToken(pushTokenData);
       return pushTokenString;
     } catch (error) {
-      console.error("Error obteniendo el token de notificación:", error);
+      console.log("Error obteniendo el token de notificación:", error);
       alert(
         "Error al obtener el token de notificación. Por favor, intenta nuevamente más tarde."
       );

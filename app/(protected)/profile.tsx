@@ -4,27 +4,22 @@ import ScreenLayout from "@/shared/components/ScreenLayout";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { authStore } from "@/store/auth.store";
 import { router, Stack } from "expo-router";
-import { Text, View, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { Text, View, TouchableOpacity, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useAlert } from "@/shared/components/ui/Alert";
 
 export default function Profile() {
   const insets = useSafeAreaInsets();
-  const { signOut } = useAuth();
+  const { logout } = useAuth();
   const { user } = authStore();
+  const alert = useAlert();
 
   const handleSignOut = () => {
-    Alert.alert(
+    alert.confirm(
       "Cerrar sesión",
       "¿Estás seguro de que quieres cerrar sesión?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Cerrar sesión",
-          style: "destructive",
-          onPress: () => signOut(),
-        },
-      ]
+      () => logout()
     );
   };
 
@@ -107,9 +102,9 @@ export default function Profile() {
           headerRight: () => null,
         }}
       />
-      <ScreenLayout>
+      <ScreenLayout className="bg-gray-50">
         <ScrollView
-          className="flex-1 bg-gray-50"
+          className="flex-1"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
         >
@@ -180,9 +175,9 @@ export default function Profile() {
                 title="Tema"
                 subtitle="Cambiar entre modo claro y oscuro"
                 onPress={() =>
-                  Alert.alert(
-                    "Próximamente",
-                    "Esta función estará disponible pronto"
+                  alert.show(
+                    "Tema",
+                    "Actualmente solo está disponible el modo claro"
                   )
                 }
               />
@@ -192,9 +187,9 @@ export default function Profile() {
                 title="Idioma"
                 subtitle="Español"
                 onPress={() =>
-                  Alert.alert(
-                    "Próximamente",
-                    "Esta función estará disponible pronto"
+                  alert.show(
+                    "Idioma",
+                    "Actualmente solo está disponible el idioma español"
                   )
                 }
               />
@@ -214,10 +209,7 @@ export default function Profile() {
                 title="Ayuda"
                 subtitle="Preguntas frecuentes y soporte"
                 onPress={() =>
-                  Alert.alert(
-                    "Ayuda",
-                    "Contacta con soporte para obtener ayuda"
-                  )
+                  alert.show("Ayuda", "Contacta con soporte para obtener ayuda")
                 }
               />
               <View className="h-px mx-4 bg-gray-100" />
@@ -226,7 +218,7 @@ export default function Profile() {
                 title="Acerca de"
                 subtitle="Versión 1.0.0"
                 onPress={() =>
-                  Alert.alert(
+                  alert.show(
                     "Acerca de",
                     "Aplicación de gestión de pedidos v1.0.0"
                   )

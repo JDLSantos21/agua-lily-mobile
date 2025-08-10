@@ -2,7 +2,7 @@ import { getDeviceId } from "../utils/getDeviceId";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
-import { Alert, Platform } from "react-native";
+import { Platform } from "react-native";
 import {
   registerPushToken,
   deactivatePushToken,
@@ -16,9 +16,8 @@ export async function savePushToken(userId: string) {
 
   if (status !== "granted") {
     console.warn("Permisos de notificaciones no concedidos");
-    Alert.alert(
-      "Permiso de notificaciones no concedido",
-      "No podrás recibir notificaciones. Por favor, activa los permisos en la configuración de tu dispositivo."
+    throw new Error(
+      "Permiso de notificaciones no concedido. No podrás recibir notificaciones. Por favor, activa los permisos en la configuración de tu dispositivo."
     );
   }
 
