@@ -164,7 +164,7 @@ export default function OrderDetails() {
                   <Text className="text-sm font-medium tracking-wide text-gray-500 uppercase">
                     Pedido #{trackingCode}
                   </Text>
-                  <Text className="mt-1 text-2xl font-bold text-gray-900">
+                  <Text className="mt-1 text-xl font-bold text-gray-900">
                     {formatDate(orderInfo.data.created_at)}
                   </Text>
                 </View>
@@ -304,13 +304,15 @@ export default function OrderDetails() {
                                 Para entregas más precisas, guarda la ubicación
                                 GPS exacta del cliente
                               </Text>
+
                               <Button
                                 onPress={handleSaveLocation}
-                                variant="location"
+                                variant="warning"
+                                size="sm"
                                 text="Establecer ubicación actual"
                                 icon="location"
                                 disabled={isLoadingLocation}
-                                className="rounded-full"
+                                pressedOpacity={0.5}
                               />
                             </View>
                           </View>

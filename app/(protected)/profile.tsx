@@ -1,33 +1,46 @@
 "use client";
 
 import ScreenLayout from "@/shared/components/ScreenLayout";
-import { useAuth } from "@/features/auth/hooks/useAuth";
-import { authStore } from "@/store/auth.store";
 import { router, Stack } from "expo-router";
 import { Text, View, TouchableOpacity, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAlert } from "@/shared/components/ui/Alert";
+import { useSession } from "@/context/AuthContext";
 
 export default function Profile() {
   const insets = useSafeAreaInsets();
-  const { logout } = useAuth();
-  const { user } = authStore();
+  const { signOut } = useSession();
   const alert = useAlert();
+  const { session } = useSession();
+
+  const user = session?.user;
 
   const handleSignOut = () => {
     alert.confirm(
       "Cerrar sesión",
       "¿Estás seguro de que quieres cerrar sesión?",
-      () => logout()
+      () => signOut()
     );
   };
 
-  const ProfileCard = ({ children, className = "" }) => (
+  interface ProfileCardProps {
+    children: React.ReactNode;
+    className?: string;
+  }
+
+  const ProfileCard = ({ children, className = "" }: ProfileCardProps) => (
     <View className={`bg-white rounded-2xl shadow-sm mx-4 mb-4 ${className}`}>
       {children}
     </View>
   );
+
+  interface ProfileOptionProps {
+    icon: React.ComponentProps<typeof Ionicons>["name"];
+    title: string;
+    subtitle?: string;
+    variant?: "default" | "danger";
+  }
 
   const ProfileOption = ({
     icon,
@@ -36,7 +49,7 @@ export default function Profile() {
     onPress,
     showArrow = true,
     variant = "default",
-  }) => {
+  }: ProfileOptionProps & { onPress: () => void; showArrow?: boolean }) => {
     const textColor = variant === "danger" ? "text-red-600" : "text-gray-900";
     const iconColor = variant === "danger" ? "#DC2626" : "#6B7280";
 
@@ -63,7 +76,7 @@ export default function Profile() {
   };
 
   const getRoleDisplayName = (role: string) => {
-    const roleMap = {
+    const roleMap: Record<string, string> = {
       admin: "Administrador",
       driver: "Chofer",
       administrativo: "Administrativo",
@@ -74,7 +87,7 @@ export default function Profile() {
   };
 
   const getRoleBadgeColor = (role: string) => {
-    const colorMap = {
+    const colorMap: Record<string, string> = {
       admin: "bg-purple-100 text-purple-700",
       operador: "bg-blue-100 text-blue-700",
       administrativo: "bg-green-100 text-green-700",
@@ -102,14 +115,14 @@ export default function Profile() {
           headerRight: () => null,
         }}
       />
-      <ScreenLayout className="bg-gray-50">
+      <ScreenLayout className="bg-gray-100">
         <ScrollView
           className="flex-1"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
         >
           {/* Header del perfil */}
-          <View className="items-center py-8">
+          <View className="items-center py-8 mb-4 bg-white">
             {/* Avatar */}
             <View className="items-center justify-center w-24 h-24 mb-4 bg-blue-500 rounded-full">
               <Text className="text-2xl font-bold text-white">

@@ -96,7 +96,7 @@ export default function EquipmentsScreen() {
             </Text>
           </View>
           <View className="items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
-            <Ionicons name="settings-outline" size={20} color="#3B82F6" />
+            <Ionicons name="hardware-chip-outline" size={20} color="#3B82F6" />
           </View>
         </View>
       </View>
@@ -139,7 +139,7 @@ export default function EquipmentsScreen() {
             paddingTop: 16,
             paddingBottom: 20,
           }}
-          ItemSeparatorComponent={() => <View className="h-3" />}
+          ItemSeparatorComponent={() => <View className="h-2" />}
         />
       )}
     </View>

@@ -7,7 +7,7 @@ export default function OrderStatusBadge({
   size = "md",
 }: {
   status: OrderStatus;
-  size?: "sm" | "md";
+  size?: "xs" | "sm" | "md";
 }) {
   const statusConfig: {
     [key in OrderStatus]: {
@@ -53,7 +53,7 @@ export default function OrderStatusBadge({
 
   return (
     <View
-      className={`flex-row items-center w-[125px] justify-center ${size === "md" ? "px-4 py-3" : "px-3 py-2"}  rounded-2xl`}
+      className={`flex-row items-center w-[125px] justify-center ${size === "md" ? "px-4 py-3" : size === "sm" ? "px-3 py-2" : "px-2 py-1"}  rounded-2xl`}
       style={{
         backgroundColor: config.bg,
         shadowColor: "#000",
@@ -63,7 +63,11 @@ export default function OrderStatusBadge({
         elevation: 2,
       }}
     >
-      <Ionicons name={config.icon} size={20} color={config.iconColor} />
+      <Ionicons
+        name={config.icon}
+        size={size === "md" ? 20 : size === "sm" ? 18 : 16}
+        color={config.iconColor}
+      />
       <Text
         className="ml-2 text-sm font-bold"
         style={{ color: config.textColor }}

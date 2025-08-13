@@ -9,7 +9,7 @@ export default function ScreenLayout({
 }) {
   return (
     <View
-      style={{ flex: 1, paddingHorizontal: 20 }}
+      style={{ flex: 1 }}
       className={`${className ? className : "bg-white"}`}
     >
       {children}

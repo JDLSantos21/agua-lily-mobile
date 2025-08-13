@@ -1,11 +1,13 @@
+import { AuthContext } from "@/context/AuthContext";
 import { useNotificationListeners } from "@/features/notifications/hooks/useNotificationListeners";
 import { useNotificationSetup } from "@/features/notifications/hooks/useNotificationSetup";
 import { useRegisterPushToken } from "@/features/notifications/hooks/useRegisterPushToken";
 import Main from "@/shared/components/Main";
-import { authStore } from "@/store/auth.store";
+import { use } from "react";
 
 export default function HomeTab() {
-  const userId = authStore.getState().user?.id;
+  const { session } = use(AuthContext);
+  const userId = session?.user?.id;
   useNotificationSetup();
   useRegisterPushToken(userId);
   useNotificationListeners();

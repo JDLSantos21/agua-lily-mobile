@@ -1,7 +1,7 @@
 export interface Equipment {
   id: number;
   serial_number: string;
-  type: string;
+  type: "anaquel" | "nevera" | "otros";
   model: string;
   brand: string;
   capacity: number;

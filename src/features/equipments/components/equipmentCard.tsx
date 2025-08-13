@@ -1,6 +1,6 @@
 import { Text, View, TouchableOpacity } from "react-native";
 import { Equipment } from "../types";
-import { User, MapPin, Settings, Gauge } from "lucide-react-native";
+import { User, MapPin, Settings } from "lucide-react-native";
 import { Link } from "expo-router";
 import {
   getEquipmentStatusBadgeBg,
@@ -16,14 +16,24 @@ export default function EquipmentCard({
   return (
     <Link href={`/equipments/${equipment?.id}`} asChild>
       <TouchableOpacity activeOpacity={0.7}>
-        <View className="overflow-hidden bg-white shadow-sm rounded-2xl">
+        <View className="overflow-hidden bg-white border border-gray-300 shadow-md rounded-2xl">
           {/* Header del card */}
           <View className="p-4 pb-3">
             <View className="flex-row items-start justify-between mb-3">
               <View className="flex-1">
                 <View className="flex-row items-center mb-1">
                   <View className="items-center justify-center w-8 h-8 mr-3 bg-gray-100 rounded-full">
-                    <Ionicons name="settings" size={16} color="#6B7280" />
+                    {equipment.type === "nevera" ? (
+                      <Ionicons name="snow" size={16} color="#6B7280" />
+                    ) : equipment.type === "anaquel" ? (
+                      <Ionicons name="apps-outline" size={16} color="#6B7280" />
+                    ) : (
+                      <Ionicons
+                        name="document-outline"
+                        size={16}
+                        color="#6B7280"
+                      />
+                    )}
                   </View>
                   <Text className="text-sm font-medium tracking-wide text-gray-500 uppercase">
                     {equipment.type}
@@ -60,9 +70,8 @@ export default function EquipmentCard({
                 </Text>
               </View>
               <View className="flex-row items-center">
-                <Gauge size={14} color="#6B7280" />
                 <Text className="ml-2 text-sm font-medium text-gray-900">
-                  {equipment.capacity}
+                  Capacidad:. {equipment.capacity}
                 </Text>
               </View>
             </View>

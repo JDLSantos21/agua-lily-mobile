@@ -176,7 +176,7 @@ export default function EquipmentDetails() {
                 <Text className="text-sm font-medium tracking-wide text-gray-500 uppercase">
                   {equipment?.data?.type}
                 </Text>
-                <Text className="mt-1 text-2xl font-bold text-gray-900">
+                <Text className="mt-1 text-xl font-bold text-gray-900">
                   #{equipment?.data?.serial_number || "Sin serie"}
                 </Text>
               </View>

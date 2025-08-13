@@ -70,7 +70,7 @@ export default function Main() {
     const hasFilters = activeFiltersCount > 0;
 
     return (
-      <View className="items-center justify-center flex-1 px-6">
+      <View className="items-center justify-center flex-1 px-6 bg-white">
         <Ionicons
           name={hasFilters ? "filter-outline" : "receipt-outline"}
           size={64}
@@ -98,12 +98,15 @@ export default function Main() {
   };
 
   return (
-    <ScreenLayout>
-      <View className={`mb-4`}>
-        <View className="flex-row justify-between px-4 pt-4 pb-2">
-          <View>
-            <Text className="text-2xl font-bold text-gray-900">Pedidos</Text>
-            <Text className="mt-1 text-sm text-gray-600">
+    <ScreenLayout className="bg-gray-50">
+      {/* Header */}
+      <View className="px-4 pt-6 pb-4 bg-white border-b border-gray-100 ">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1">
+            <Text className="text-2xl font-bold text-gray-900">
+              Pedidos recientes
+            </Text>
+            <Text className="mt-1 text-sm text-gray-500">
               {orders?.data?.length || 0} pedidos
             </Text>
           </View>
@@ -141,6 +144,8 @@ export default function Main() {
           contentContainerStyle={{
             flexGrow: 1,
             paddingBottom: 20,
+            paddingHorizontal: 16,
+            paddingTop: 16,
           }}
           ItemSeparatorComponent={() => <View className="h-2" />}
           ListEmptyComponent={renderEmptyState}

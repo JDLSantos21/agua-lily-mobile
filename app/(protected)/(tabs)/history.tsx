@@ -4,15 +4,24 @@ import { Text, View, FlatList, RefreshControl } from "react-native";
 import OrderCard from "@/features/orders/components/OrderCard";
 import Loading from "@/shared/components/Loading";
 import OrdersError from "@/features/orders/components/OrdersError";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function History() {
   const { data: orders, isLoading, refetch, isError } = useLastOrders();
   return (
     <ScreenLayout>
-      <View className={`mb-4`}>
-        <View className="flex-row justify-between px-4 pt-4 pb-2">
-          <Text className="text-2xl font-bold text-gray-900">Pedidos</Text>
-          <Text className="mt-1 text-sm text-gray-600">Últimos 10 pedidos</Text>
+      {/* Header */}
+      <View className="px-4 pt-6 pb-4 bg-white border-b border-gray-100">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1">
+            <Text className="text-2xl font-bold text-gray-900">Historial</Text>
+            <Text className="mt-1 text-sm text-gray-500">
+              Últimos 10 pedidos completados
+            </Text>
+          </View>
+          <View className="items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
+            <Ionicons name="reload-outline" size={20} color="#3B82F6" />
+          </View>
         </View>
       </View>
 
@@ -29,7 +38,11 @@ export default function History() {
           data={orders?.data || []}
           keyExtractor={(item) => item.tracking_code}
           renderItem={({ item }) => <OrderCard order={item} />}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: 20,
+          }}
           ItemSeparatorComponent={() => <View className="h-2" />}
           refreshControl={
             <RefreshControl

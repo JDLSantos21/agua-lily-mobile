@@ -3,7 +3,7 @@ export const getEquipmentStatusBadgeBg = (status: string) => {
     case "disponible":
       return "bg-green-100 color-green-500";
     case "mantenimiento":
-      return "bg-yellow-100 color-yellow-500";
+      return "bg-yellow-100 color-orange-800";
     case "asignado":
       return "bg-blue-100 color-blue-500";
     case "inhabilitado":

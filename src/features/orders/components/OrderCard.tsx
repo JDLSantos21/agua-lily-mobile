@@ -33,7 +33,7 @@ export default function OrderCard({ order }) {
   return (
     <Link href={`/${order.tracking_code}`} asChild>
       <Pressable className="active:opacity-70">
-        <View className="bg-white border border-gray-100 shadow-sm rounded-2xl">
+        <View className="bg-white border border-gray-200 shadow-md rounded-2xl">
           {/* Header con nombre del cliente */}
           <View className="flex-row items-center justify-between p-4 pb-3">
             <View className="flex-1">
@@ -47,8 +47,8 @@ export default function OrderCard({ order }) {
                 #{order.tracking_code}
               </Text>
             </View>
-            <View className="ml-3">
-              <OrderStatusBadge status={order.order_status} size="sm" />
+            <View className="self-start ml-3">
+              <OrderStatusBadge status={order.order_status} size="xs" />
             </View>
           </View>
 
