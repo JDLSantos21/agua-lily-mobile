@@ -1,4 +1,5 @@
 import { del, save, get } from "@/shared/utils/secureStore";
+import axios from "axios";
 
 interface User {
   id: string;
@@ -24,6 +25,14 @@ class AuthService {
 
     if (this.signOutCallback) {
       this.signOutCallback();
+    }
+  }
+
+  async signOut(refreshToken: string | null) {
+    if (refreshToken) {
+      await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/auth/logout`, {
+        refresh_token: refreshToken,
+      });
     }
   }
 

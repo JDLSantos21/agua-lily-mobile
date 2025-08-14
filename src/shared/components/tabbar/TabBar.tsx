@@ -3,7 +3,11 @@
 import { StyleSheet, View } from "react-native";
 import { useState } from "react";
 import TabBarButton from "./TabBarButton";
-import { useSharedValue, withSpring } from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
@@ -23,17 +27,17 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
   const tabPositionX = useSharedValue(0);
 
-  // const animatedStyle = useAnimatedStyle(() => {
-  //   return {
-  //     transform: [{ translateX: tabPositionX.value }],
-  //   };
-  // });
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: tabPositionX.value }],
+    };
+  });
 
   return (
     <View style={[styles.container]}>
       <View onLayout={onTabbarLayout} style={styles.tabbar}>
         {/* Indicador animado */}
-        {/* <Animated.View
+        <Animated.View
           pointerEvents="none"
           style={[
             animatedStyle,
@@ -43,7 +47,7 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               left: buttonWidth * 0.2,
             },
           ]}
-        /> */}
+        />
 
         {/* Botones del tab */}
         {state.routes.map((route, index) => {
@@ -106,7 +110,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    paddingVertical: 10,
+    backgroundColor: "#ffffff",
     borderTopWidth: 0.8,
     borderColor: "rgba(0, 0, 0, 0.08)",
   },

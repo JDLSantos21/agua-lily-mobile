@@ -48,16 +48,6 @@ export async function registerForPushNotificationsAsync(userId: string) {
       return alreadyRegistered;
     }
 
-    // const projectId =
-    //   Constants.expoConfig.extra.projectId ?? Constants.easConfig.projectId;
-
-    // if (!projectId) {
-    //   alert(
-    //     "No se pudo obtener el ID del proyecto de Expo. Asegúrate de que tu configuración de Expo esté correcta."
-    //   );
-    //   return;
-    // }
-
     try {
       const projectId =
         Constants?.expoConfig?.extra?.eas?.projectId ??

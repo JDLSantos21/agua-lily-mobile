@@ -13,6 +13,12 @@ export default function EquipmentCard({
 }: {
   equipment?: Equipment;
 }) {
+  const showRequireDeliveryMessage =
+    !equipment.delivered_date && !!equipment.current_customer_id;
+
+  const showRequireGPSUpdateMessage = !!equipment.require_gps_update;
+  const hasCustomer = !!equipment.current_customer_id;
+
   return (
     <Link href={`/equipments/${equipment?.id}`} asChild>
       <TouchableOpacity activeOpacity={0.7}>
@@ -79,7 +85,7 @@ export default function EquipmentCard({
 
           {/* Información del cliente */}
           <View className="px-4 pb-4">
-            {!equipment.current_customer_id ? (
+            {!hasCustomer ? (
               <View className="flex-row items-center px-3 py-2 border rounded-lg bg-amber-50 border-amber-200">
                 <Ionicons name="information-circle" size={16} color="#F59E0B" />
                 <Text className="flex-1 ml-2 text-sm text-amber-700">
@@ -111,14 +117,22 @@ export default function EquipmentCard({
                 )}
               </View>
             )}
-            {equipment.require_gps_update === 1 ? (
+            {showRequireGPSUpdateMessage && (
               <View className="flex-row items-center px-3 py-2 mt-2 border border-blue-200 rounded-lg bg-blue-50">
                 <Ionicons name="information-circle" size={16} color="#1D4ED8" />
                 <Text className="flex-1 ml-2 text-sm text-blue-700">
                   Se requiere actualización de la ubicación GPS
                 </Text>
               </View>
-            ) : null}
+            )}
+            {showRequireDeliveryMessage && (
+              <View className="flex-row items-center px-3 py-2 mt-2 border border-red-200 rounded-lg bg-red-50">
+                <Ionicons name="information-circle" size={16} color="red" />
+                <Text className="flex-1 ml-2 text-sm text-red-700">
+                  Este equipo no ha sido entregado al cliente
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </TouchableOpacity>

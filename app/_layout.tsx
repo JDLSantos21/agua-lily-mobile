@@ -62,10 +62,8 @@ function AppContent() {
       <StatusBar style="dark" />
       <BottomSheetModalProvider>
         <KeyboardProvider>
-          <AlertProvider>
-            <RootNavigator />
-            <AlertComponent />
-          </AlertProvider>
+          <RootNavigator />
+          <AlertComponent />
         </KeyboardProvider>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
@@ -92,10 +90,12 @@ export default function RootLayout() {
   }
 
   return (
-    <SessionProvider>
-      <QueryClientProvider client={queryClient}>
-        <AppContent />
-      </QueryClientProvider>
-    </SessionProvider>
+    <AlertProvider>
+      <SessionProvider>
+        <QueryClientProvider client={queryClient}>
+          <AppContent />
+        </QueryClientProvider>
+      </SessionProvider>
+    </AlertProvider>
   );
 }

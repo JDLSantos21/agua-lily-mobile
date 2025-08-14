@@ -59,10 +59,12 @@ export default function EquipmentDetails() {
     async (data: string, action: QRScannerAction) => {
       // Validar que el código QR coincida con el serial number
       if (data.trim() !== equipment?.data?.serial_number?.trim()) {
-        console.log("Serial number mismatch:", {
-          scanned: data.trim(),
-          expected: equipment?.data?.serial_number?.trim(),
-        });
+        if (__DEV__) {
+          console.log("Serial number mismatch:", {
+            scanned: data.trim(),
+            expected: equipment?.data?.serial_number?.trim(),
+          });
+        }
 
         alert.warning(
           "Equipo no coincide",

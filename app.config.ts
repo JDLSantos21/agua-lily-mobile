@@ -4,20 +4,28 @@ const EAS_PROJECT_ID = "b116acb7-d591-454b-8eac-946726569a80";
 const PROJECT_SLUG = "agua-lily-mobile";
 const OWNER = "jdlsantos";
 
-const APP_NAME = "Agua Lily Mobile";
+const APP_NAME = "Agua Lily";
 const BUNDLE_IDENTIFIER = "com.jdlsantos.agualilymobile";
 const PACKAGE_NAME = "com.jdlsantos.agualilymobile";
 const ICON = "./assets/icons/adaptive_icon.png";
 const ADAPTIVE_ICON = "./assets/icons/adaptive_icon.png";
 const SCHEME = "agualilymobile";
+const GOOGLE_SERVICES = "./google-services";
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   console.log(`Building app for ${process.env.APP_ENV} environment`);
-  const { name, bundleIdentifier, packageName, icon, adaptiveIcon, scheme } =
-    getDynamicAppConfig(
-      (process.env.APP_ENV as "development" | "preview" | "production") ||
-        "development"
-    );
+  const {
+    name,
+    bundleIdentifier,
+    packageName,
+    icon,
+    adaptiveIcon,
+    scheme,
+    googleServicesFilePath,
+  } = getDynamicAppConfig(
+    (process.env.APP_ENV as "development" | "preview" | "production") ||
+      "development"
+  );
 
   return {
     ...config,
@@ -49,7 +57,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       },
       edgeToEdgeEnabled: true,
       package: packageName,
-      googleServicesFile: "./google-services.json",
+      googleServicesFile: googleServicesFilePath,
       permissions: [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
@@ -120,6 +128,7 @@ export const getDynamicAppConfig = (
       icon: ICON,
       adaptiveIcon: ADAPTIVE_ICON,
       scheme: SCHEME,
+      googleServicesFilePath: `${GOOGLE_SERVICES}/prod.json`,
     };
   }
 
@@ -131,17 +140,19 @@ export const getDynamicAppConfig = (
       icon: ICON,
       adaptiveIcon: ADAPTIVE_ICON,
       scheme: `${SCHEME}-prev`,
+      googleServicesFilePath: `${GOOGLE_SERVICES}/prev.json`,
     };
   }
 
   if (enviroment === "development") {
     return {
-      name: `${APP_NAME} dev`,
+      name: `${APP_NAME} Dev`,
       bundleIdentifier: `${BUNDLE_IDENTIFIER}.dev`,
       packageName: `${PACKAGE_NAME}.dev`,
       icon: ICON,
       adaptiveIcon: ADAPTIVE_ICON,
       scheme: `${SCHEME}-dev`,
+      googleServicesFilePath: `${GOOGLE_SERVICES}/dev.json`,
     };
   }
 };

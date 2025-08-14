@@ -1,6 +1,8 @@
 import { authService } from "@/features/auth/services/auth.service";
+import { deactivatePushToken } from "@/features/notifications/api/registerToken.api";
 import { useStorageState } from "@/hooks/useStorageState";
-import { save } from "@/shared/utils/secureStore";
+import { useAlert } from "@/shared/components/ui/Alert";
+import { get, save } from "@/shared/utils/secureStore";
 import axios, { AxiosError } from "axios";
 import {
   use,
@@ -46,6 +48,7 @@ export function useSession() {
 }
 
 export function SessionProvider({ children }: PropsWithChildren) {
+  const alert = useAlert();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [[isLoading, sessionString], setSessionString] =
     useStorageState("session");
@@ -62,9 +65,26 @@ export function SessionProvider({ children }: PropsWithChildren) {
       })()
     : null;
 
-  const signOut = useCallback(() => {
-    setSessionString(null);
-  }, [setSessionString]);
+  const signOut = useCallback(async () => {
+    const refreshToken = session?.refresh_token;
+    const pushToken = await get("pushToken");
+    console.log(refreshToken);
+
+    try {
+      if (pushToken) {
+        console.log("Desactivando push token:", pushToken);
+        deactivatePushToken(pushToken);
+      }
+      await authService.signOut(refreshToken);
+      setSessionString(null);
+    } catch (error) {
+      console.log("Error Al cerrar session", error);
+      alert.error(
+        "Error al cerrar sesión",
+        "No se pudo cerrar sesión correctamente."
+      );
+    }
+  }, [setSessionString, alert, session?.refresh_token]);
 
   useEffect(() => {
     authService.setSignOutCallback(signOut);
