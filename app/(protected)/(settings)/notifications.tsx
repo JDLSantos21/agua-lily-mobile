@@ -1,18 +1,20 @@
 import ScreenLayout from "@/shared/components/ScreenLayout";
 import { Stack } from "expo-router";
 import { Text, TouchableOpacity, View, AppState } from "react-native";
-// import { authStore } from "@/store/auth.store";
-// import { registerForPushNotificationsAsync } from "@/shared/utils/registerForPushNotificationsAsync";
 import { Ionicons } from "@expo/vector-icons";
 import { openAppSettings } from "@/shared/utils/openAppSettings";
 import { useEffect, useState } from "react";
 import * as Notifications from "expo-notifications";
 import { useAlert } from "@/shared/components/ui/Alert";
+import { registerForPushNotificationsAsync } from "@/shared/utils";
+import { useSession } from "@/context/AuthContext";
 
 export default function NotificationsScreen() {
   const [status, setStatus] = useState<Notifications.PermissionStatus>();
   const alert = useAlert();
-  // const { user } = authStore();
+  const { session } = useSession();
+
+  const user = session?.user!;
 
   const checkPermissions = async () => {
     const { status } = await Notifications.getPermissionsAsync();
@@ -49,7 +51,7 @@ export default function NotificationsScreen() {
       );
     } else {
       try {
-        // await registerForPushNotificationsAsync(user.id);
+        await registerForPushNotificationsAsync(user.id);
       } catch {
         alert.error(
           "Ocurrió un error",

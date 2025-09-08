@@ -2,7 +2,7 @@ import { authService } from "@/features/auth/services/auth.service";
 import { deactivatePushToken } from "@/features/notifications/api/registerToken.api";
 import { useStorageState } from "@/hooks/useStorageState";
 import { useAlert } from "@/shared/components/ui/Alert";
-import { get, save } from "@/shared/utils/secureStore";
+import { del, get, save } from "@/shared/utils/secureStore";
 import axios, { AxiosError } from "axios";
 import {
   use,
@@ -76,6 +76,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
         deactivatePushToken(pushToken);
       }
       await authService.signOut(refreshToken);
+      await del("pushToken");
       setSessionString(null);
     } catch (error) {
       console.log("Error Al cerrar session", error);

@@ -89,7 +89,7 @@ export default function EquipmentCard({
               <View className="flex-row items-center px-3 py-2 border rounded-lg bg-amber-50 border-amber-200">
                 <Ionicons name="information-circle" size={16} color="#F59E0B" />
                 <Text className="flex-1 ml-2 text-sm text-amber-700">
-                  Sin cliente asociado
+                  Este equipo no está asignado a ningún cliente
                 </Text>
               </View>
             ) : (

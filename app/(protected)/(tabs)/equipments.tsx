@@ -92,7 +92,7 @@ export default function EquipmentsScreen() {
             <Text className="text-2xl font-bold text-gray-900">Equipos</Text>
             <Text className="mt-1 text-sm text-gray-500">
               {equipmentCount} {equipmentCount === 1 ? "equipo" : "equipos"}{" "}
-              registrados
+              mostrados
             </Text>
           </View>
           <View className="items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
