@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Alert } from "react-native";
+import { useAlert } from "@/shared/components/ui/Alert";
 
 export const useLocation = (tracking_code: string) => {
+  const alert = useAlert();
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -10,16 +11,16 @@ export const useLocation = (tracking_code: string) => {
       setIsGettingLocation(true);
       setIsSaving(true);
 
-      Alert.alert(
+      alert.success(
         "Ubicación guardada",
-        "La ubicación del cliente se ha actualizado correctamente."
+        "La ubicación del cliente se ha actualizado correctamente.",
       );
     } catch (error: any) {
       console.log("Error al guardar la ubicación del cliente:", error);
-      Alert.alert(
+      alert.error(
         "Ocurrió un problema",
         error.message ||
-          "No se pudo guardar la ubicación del cliente. Inténtalo de nuevo más tarde."
+          "No se pudo guardar la ubicación del cliente. Inténtalo de nuevo más tarde.",
       );
     } finally {
       setIsGettingLocation(false);

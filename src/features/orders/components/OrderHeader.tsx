@@ -1,10 +1,11 @@
 import OrderStatusBadge from "@/shared/components/OrderStatusBadge";
 import formatDate from "@/shared/utils/format-date";
 import { Pressable, Text, View, StyleProp, ViewStyle } from "react-native";
+import { OrderStatus } from "@/types/orders.types";
 
 interface OrderHeaderProps {
   created_at: string;
-  orderStatus: string;
+  orderStatus: OrderStatus;
   onStatusPress: () => void;
   style?: StyleProp<ViewStyle>;
 }

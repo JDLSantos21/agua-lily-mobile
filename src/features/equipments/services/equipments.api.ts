@@ -2,7 +2,7 @@ import { api } from "@/lib/api";
 import { Equipment } from "../types";
 
 export const getEquipments = async () => {
-  const res = await api.get("/equipments");
+  const res = await api.get("/equipments/mobile");
   return res.data;
 };
 
@@ -21,11 +21,28 @@ export const getEquipmentById = async (id: number) => {
 export const updateEquipmentLocation = async (
   id: number,
   latitude: number,
-  longitude: number
+  longitude: number,
 ) => {
   const res = await api.put(`/equipments/${id}/location`, {
     latitude,
     longitude,
   });
   return res.data;
+};
+
+type RegisterEquipmentDeliveryResponse = {
+  success: boolean;
+  message: string;
+};
+
+export const registerEquipmentDelivery = async (
+  id: number,
+  latitude: number,
+  longitude: number,
+) => {
+  const res = await api.post(`/equipments/${id}/delivery`, {
+    latitude,
+    longitude,
+  });
+  return res.data as RegisterEquipmentDeliveryResponse;
 };

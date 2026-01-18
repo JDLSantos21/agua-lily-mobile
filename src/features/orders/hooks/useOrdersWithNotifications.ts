@@ -1,29 +1,32 @@
 import { useCallback, useEffect } from "react";
 import { AppState } from "react-native";
-import { useOrders } from "./useOrders";
-import { OrderFilters } from "@/types/filters.types";
+import { useDriverOrders } from "./useOrders";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePushNotifications } from "@/shared/hooks/usePushNotifications";
 
 interface UseOrdersWithNotificationsProps {
-  filters?: OrderFilters;
+  driverId: string | undefined;
 }
 
 export function useOrdersWithNotifications({
-  filters,
+  driverId,
 }: UseOrdersWithNotificationsProps) {
   const queryClient = useQueryClient();
-  const ordersQuery = useOrders(filters);
+  const ordersQuery = useDriverOrders(driverId);
   const { expoPushToken, notification } = usePushNotifications();
 
-  // Función para actualizar pedidos
+  // Función para actualizar pedidos del conductor
   const refreshOrders = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["orders"] });
-  }, [queryClient]);
+    queryClient.invalidateQueries({ queryKey: ["driverOrders", driverId] });
+  }, [queryClient, driverId]);
 
-  // Escuchar notificaciones de pedidos
+  // Escuchar SOLO notificaciones de asignación de pedidos
+  // Ya no escuchamos "order_update" porque esas van a admin/operador
   useEffect(() => {
-    if (notification?.request?.content?.data?.type === "order_update") {
+    const notificationType = notification?.request?.content?.data?.type;
+    
+    // Solo refrescar cuando es una asignación de pedido al usuario actual
+    if (notificationType === "order_assigned") {
       refreshOrders();
     }
   }, [notification, refreshOrders]);

@@ -1,5 +1,13 @@
 import { ActivityIndicator, Text, View, Modal } from "react-native";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 
 type LoadingVariant = "fullscreen" | "modal" | "inline" | "overlay";
 
@@ -19,6 +27,48 @@ type LoadingProps = {
   animationType?: "none" | "slide" | "fade";
   theme?: "light" | "dark";
   showProgress?: boolean;
+};
+
+// Componente auxiliar para la animación de pulso
+const ProgressDots = () => {
+  const Dot = ({ delay }: { delay: number }) => {
+    const opacity = useSharedValue(0.5);
+
+    useEffect(() => {
+      opacity.value = withDelay(
+        delay,
+        withRepeat(
+          withSequence(
+            withTiming(1, { duration: 500 }),
+            withTiming(0.5, { duration: 500 })
+          ),
+          -1,
+          true
+        )
+      );
+    }, []);
+
+    const style = useAnimatedStyle(() => ({
+      opacity: opacity.value,
+    }));
+
+    const AnimatedView = Animated.View as any;
+
+    return (
+      <AnimatedView
+        className="w-2 h-2 bg-gray-400 rounded-full"
+        style={style}
+      />
+    );
+  };
+
+  return (
+    <View className="flex-row mt-4 space-x-2">
+      <Dot delay={0} />
+      <Dot delay={150} />
+      <Dot delay={300} />
+    </View>
+  );
 };
 
 export default function Loading({
@@ -80,7 +130,9 @@ export default function Loading({
 
   const renderContent = () => (
     <View className={`${styles.content} ${containerStyle || ""}`}>
-      {children || (
+      {children ? (
+        <>{children}</>
+      ) : (
         <>
           {/* Loading Spinner Container */}
           <View className="relative mb-6">
@@ -109,21 +161,16 @@ export default function Loading({
           )}
 
           {/* Progress Dots */}
-          {showProgress && (
-            <View className="flex-row mt-4 space-x-2">
-              <View className="w-2 h-2 bg-gray-300 rounded-full animate-pulse" />
-              <View className="w-2 h-2 delay-100 bg-gray-400 rounded-full animate-pulse" />
-              <View className="w-2 h-2 delay-200 bg-gray-500 rounded-full animate-pulse" />
-            </View>
-          )}
+          {showProgress && <ProgressDots />}
         </>
       )}
+      
     </View>
   );
 
   if (!visible) return null;
 
-  // Para modal y overlay, usar Modal de React Native
+  // Para modal y overlay usar Modal de React Native
   if (variant === "modal" || variant === "overlay") {
     return (
       <Modal

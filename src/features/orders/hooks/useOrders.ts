@@ -2,6 +2,7 @@
 import {
   getOrderByCode,
   getOrders,
+  getOrdersByDriver,
   updateOrderStatus,
   getLastOrders,
 } from "@/features/orders/services/orders.api";
@@ -13,6 +14,15 @@ export function useOrders(filters?: OrderFilters) {
   return useQuery({
     queryKey: ["orders", filters],
     queryFn: () => getOrders(filters),
+  });
+}
+
+// Hook para obtener pedidos asignados a un conductor específico
+export function useDriverOrders(driverId: string | undefined) {
+  return useQuery({
+    queryKey: ["driverOrders", driverId],
+    queryFn: () => getOrdersByDriver(driverId!),
+    enabled: !!driverId,
   });
 }
 
@@ -42,8 +52,10 @@ export function useUpdateOrderStatus(tracking_code: string) {
       orderId: number;
       data: { status: OrderStatus; notes?: string | null };
     }) => updateOrderStatus(orderId, data),
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
+      // Invalidar todas las queries relacionadas con pedidos
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["driverOrders"] });
       queryClient.invalidateQueries({ queryKey: ["order", tracking_code] });
       queryClient.invalidateQueries({ queryKey: ["lastOrders"] });
     },

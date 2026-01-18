@@ -1,81 +1,55 @@
-// import { del, get, save } from "@/shared/utils/secureStore";
-// import { loginApi, logoutApi } from "./auth.api";
-// import { tokenManager } from "../utils/tokenManager";
-// import { authStore } from "@/store/auth.store";
-// import { deactivatePushToken } from "@/features/notifications/api/registerToken.api";
-// import { refreshApi } from "./refresh.api";
+import { del, save, get } from "@/shared/utils/secureStore";
+import axios from "axios";
 
-import { authStore } from "@/store/auth.store";
-import { loginApi } from "./auth.api";
+interface User {
+  id: string;
+  role: string;
+  name: string;
+}
 
-// export const login = async (username: string, password: string) => {
-//   const { data } = await loginApi(username, password);
-//   console.log("login: ", data);
-//   await save("access", data.access_token);
-//   await save("refresh", data.refresh_token);
-//   tokenManager.set(data.access_token);
+interface Session {
+  access_token: string;
+  user: User | null;
+  refresh_token: string | null;
+}
 
-//   authStore.setState({
-//     user: {
-//       id: data.id,
-//       name: data.name,
-//       role: data.role,
-//     },
-//     accessToken: data.access_token,
-//     refreshToken: data.refresh_token,
-//   });
-// };
+class AuthService {
+  private signOutCallback: (() => void) | null = null;
 
-// export const refresh = async () => {
-//   const refreshToken = await get("refresh");
-//   if (!refreshToken) throw new Error("No refresh token available");
+  setSignOutCallback(callback: () => void) {
+    this.signOutCallback = callback;
+  }
+  async clearSession() {
+    await del("session");
+    await del("refresh_token");
 
-//   try {
-//     const { data } = await refreshApi(refreshToken);
-//     await save("access", data.access_token);
-//     await save("access", data.refresh_token);
-//     tokenManager.set(data.access_token);
-//     authStore.setState({
-//       accessToken: data.access_token,
-//       refreshToken: data.refresh_token,
-//     });
+    if (this.signOutCallback) {
+      this.signOutCallback();
+    }
+  }
 
-//     console.log("refresh: ", data);
-//     return data.access_token;
-//   } catch (error) {
-//     if (error.response.status === 401) {
-//       await del("access");
-//       await del("refresh");
-//       authStore.setState({
-//         user: null,
-//         accessToken: null,
-//         refreshToken: null,
-//       });
+  async signOut(refreshToken: string | null) {
+    if (refreshToken) {
+      await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/auth/logout`, {
+        refresh_token: refreshToken,
+      });
+    }
+  }
 
-//       console.log("fallo el token refresh", error);
-//     }
-//   }
-// };
+  async saveTokens(accessToken: string, refreshToken: string) {
+    // Get current session to preserve user data
+    const currentSessionString = await get("session");
+    if (currentSessionString) {
+      const currentSession: Session = JSON.parse(currentSessionString);
+      const updatedSession: Session = {
+        ...currentSession,
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      };
+      await save("session", JSON.stringify(updatedSession));
+    }
+    await save("refresh_token", refreshToken);
+  }
+}
 
-// export const logout = async () => {
-//   try {
-//     const pushToken = await get("pushToken");
-//     const refreshToken = await get("refresh");
-//     if (pushToken) await deactivatePushToken(pushToken);
-//     await logoutApi(refreshToken);
-//   } catch {
-//     return false;
-//   }
-
-//   tokenManager.clear();
-//   await del("access");
-//   await del("refresh");
-//   await del("pushToken");
-//   authStore.setState({
-//     user: null,
-//     accessToken: null,
-//     refreshToken: null,
-//   });
-
-//   return true;
-// };
+export const authService = new AuthService();

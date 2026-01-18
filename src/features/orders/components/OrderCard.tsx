@@ -6,75 +6,141 @@ import { useEffect, useRef } from "react";
 import { Animated, Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import formatDate from "@/shared/utils/format-date";
+import * as Haptics from "expo-haptics";
+import { OrderStatus } from "@/types/orders.types";
 
-export default function OrderCard({ order }) {
-  const getStatusIcon = (status) => {
-    switch (status?.toLowerCase()) {
-      case "pending":
-      case "pendiente":
-        return "time-outline";
-      case "processing":
-      case "procesando":
-        return "sync-outline";
-      case "shipped":
-      case "enviado":
-        return "car-outline";
-      case "delivered":
-      case "entregado":
-        return "checkmark-circle-outline";
-      case "cancelled":
-      case "cancelado":
-        return "close-circle-outline";
-      default:
-        return "receipt-outline";
-    }
+interface Order {
+  id: number;
+  tracking_code: string;
+  customer_name: string;
+  order_status: OrderStatus;
+  order_date: string;
+  shipping_address?: string;
+  scheduled_delivery_date?: string;
+}
+
+export default function OrderCard({ order }: { order: Order }) {
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   return (
     <Link href={`/${order.tracking_code}`} asChild>
-      <Pressable className="active:opacity-70">
-        <View className="bg-white border border-gray-100 shadow-sm rounded-2xl">
-          {/* Header con nombre del cliente */}
-          <View className="flex-row items-center justify-between p-4 pb-3">
-            <View className="flex-1">
-              <Text
-                className="text-lg font-semibold text-gray-900"
-                numberOfLines={1}
-              >
-                {order.customer_name}
-              </Text>
-              <Text className="mt-1 text-sm text-gray-500">
-                #{order.tracking_code}
-              </Text>
-            </View>
-            <View className="ml-3">
+      <Pressable
+        onPress={handlePress}
+        style={({ pressed }) => ({
+          opacity: pressed ? 0.95 : 1,
+          transform: [{ scale: pressed ? 0.99 : 1 }],
+        })}
+        accessibilityLabel={`Pedido de ${order.customer_name}, código ${order.tracking_code}`}
+        accessibilityRole="button"
+      >
+        <View
+          style={{
+            backgroundColor: "white",
+            borderRadius: 16,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 3,
+            marginHorizontal: 2, // Slight margin to prevent shadow clipping if too tight
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#FFFFFF",
+              borderRadius: 16,
+              overflow: "hidden",
+            }}
+          >
+            {/* Header: Cliente y Status */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                padding: 14,
+                paddingBottom: 10,
+              }}
+            >
+              <View style={{ flex: 1, paddingRight: 10 }}>
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: 17,
+                    fontWeight: "600",
+                    color: "#111827",
+                  }}
+                >
+                  {order.customer_name}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: "#9CA3AF",
+                    marginTop: 2,
+                  }}
+                >
+                  #{order.tracking_code}
+                </Text>
+              </View>
               <OrderStatusBadge status={order.order_status} size="sm" />
             </View>
-          </View>
 
-          {/* Separador sutil */}
-          <View className="h-px mx-4 bg-gray-100" />
+            {/* Dirección si existe */}
+            {order.shipping_address && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 14,
+                  paddingBottom: 10,
+                }}
+              >
+                <Ionicons name="location-outline" size={14} color="#9CA3AF" />
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    flex: 1,
+                    marginLeft: 6,
+                    fontSize: 13,
+                    color: "#6B7280",
+                  }}
+                >
+                  {order.shipping_address}
+                </Text>
+              </View>
+            )}
 
-          {/* Footer con fecha e icono */}
-          <View className="flex-row items-center justify-between p-4 pt-3">
-            <View className="flex-row items-center flex-1">
-              <Ionicons name="calendar-outline" size={16} color="#6B7280" />
-              <Text className="ml-2 text-sm text-gray-600">
-                {formatDate(order.order_date)}
-              </Text>
-            </View>
-            <View className="flex-row items-center ml-3">
-              <Ionicons
-                name={getStatusIcon(order.order_status)}
-                size={16}
-                color="#6B7280"
-              />
-              <Ionicons
-                name="chevron-forward"
-                size={16}
-                color="#9CA3AF"
-                style={{ marginLeft: 8 }}
-              />
+            {/* Footer: Fecha y chevron solamente */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                backgroundColor: "#FAFAFA",
+                borderTopWidth: 1,
+                borderTopColor: "#F3F4F6",
+              }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Ionicons name="calendar-outline" size={14} color="#9CA3AF" />
+                <Text
+                  style={{
+                    marginLeft: 5,
+                    fontSize: 13,
+                    color: "#6B7280",
+                  }}
+                >
+                  {formatDate(order.order_date)}
+                </Text>
+              </View>
+
+              {/* Solo chevron, sin texto */}
+              <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
             </View>
           </View>
         </View>
@@ -83,22 +149,28 @@ export default function OrderCard({ order }) {
   );
 }
 
-export function AnimatedOrderCard({ order, index }) {
+export function AnimatedOrderCard({
+  order,
+  index,
+}: {
+  order: Order;
+  index: number;
+}) {
   const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(20)).current;
+  const translateY = useRef(new Animated.Value(8)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(opacity, {
         toValue: 1,
-        duration: 400,
-        delay: index * 80,
+        duration: 250,
+        delay: index * 40,
         useNativeDriver: true,
       }),
       Animated.timing(translateY, {
         toValue: 0,
-        duration: 400,
-        delay: index * 80,
+        duration: 250,
+        delay: index * 40,
         useNativeDriver: true,
       }),
     ]).start();

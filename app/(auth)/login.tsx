@@ -4,18 +4,20 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
+  //   Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from "react-native";
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useAlert } from "@/shared/components/ui/Alert";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useMutation } from "@tanstack/react-query";
 import { StatusBar } from "expo-status-bar";
 
 export default function Login() {
+  const alert = useAlert();
   const { signIn } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -23,25 +25,24 @@ export default function Login() {
   const { mutate, isPending } = useMutation({
     mutationFn: () => signIn(username, password),
     onError: (e: any) =>
-      Alert.alert(
+      alert.error(
         "No se pudo iniciar sesión",
-        e.response.data.error || "Ocurrió un error al iniciar sesión"
+        e.response?.data?.error || "Ocurrió un error al iniciar sesión",
       ),
   });
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : "padding"}
       className="flex-1 bg-gradient-to-br from-blue-50 to-blue-100"
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
     >
       <StatusBar style="dark" />
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}
         className="flex-1"
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        automaticallyAdjustKeyboardInsets={true}
       >
         <View className="justify-center flex-1 px-8 py-8">
           {/* Logo Section */}

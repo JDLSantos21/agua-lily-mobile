@@ -35,6 +35,13 @@ export async function getLastOrders(limit: number = 10) {
     .then((r) => r.data);
 }
 
+// Obtener pedidos asignados al conductor actual
+export async function getOrdersByDriver(driverId: string) {
+  return await api
+    .get(`/orders/driver/${driverId}/pending`)
+    .then((r) => r.data);
+}
+
 interface GetOrderByCodeResponse {
   data: Order;
   success: boolean;

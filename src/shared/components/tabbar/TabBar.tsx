@@ -3,47 +3,55 @@
 import { StyleSheet, View } from "react-native";
 import { useState } from "react";
 import TabBarButton from "./TabBarButton";
-import { useSharedValue, withSpring } from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const insets = useSafeAreaInsets();
   const [dimensions, setDimensions] = useState({
     width: 100,
     height: 20,
   });
 
   const buttonWidth = dimensions.width / state.routes.length;
+  const tabPositionX = useSharedValue(state.index * buttonWidth);
 
   const onTabbarLayout = (e) => {
+    const newWidth = e.nativeEvent.layout.width;
     setDimensions({
-      width: e.nativeEvent.layout.width,
+      width: newWidth,
       height: e.nativeEvent.layout.height,
     });
+    // Actualizar posición inicial del indicador
+    tabPositionX.value = state.index * (newWidth / state.routes.length);
   };
 
-  const tabPositionX = useSharedValue(0);
-
-  // const animatedStyle = useAnimatedStyle(() => {
-  //   return {
-  //     transform: [{ translateX: tabPositionX.value }],
-  //   };
-  // });
+  // Estilo animado para el indicador
+  const indicatorStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: tabPositionX.value }],
+  }));
 
   return (
-    <View style={[styles.container]}>
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <View onLayout={onTabbarLayout} style={styles.tabbar}>
-        {/* Indicador animado */}
-        {/* <Animated.View
+        {/* Indicador animado del tab activo */}
+        <Animated.View
           pointerEvents="none"
           style={[
-            animatedStyle,
+            indicatorStyle,
             styles.indicator,
             {
-              width: buttonWidth * 0.6,
-              left: buttonWidth * 0.2,
+              width: buttonWidth,
             },
           ]}
-        /> */}
+        >
+          <View style={styles.indicatorPill} />
+        </Animated.View>
 
         {/* Botones del tab */}
         {state.routes.map((route, index) => {
@@ -60,7 +68,8 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           const onPress = () => {
             tabPositionX.value = withSpring(buttonWidth * index, {
               damping: 20,
-              stiffness: 200,
+              stiffness: 180,
+              mass: 0.8,
             });
 
             const event = navigation.emit({
@@ -88,8 +97,10 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               onLongPress={onLongPress}
               isFocused={isFocused}
               routeName={route.name}
-              color={isFocused ? "#3B82F6" : "#9CA3AF"}
               label={label}
+              accessibilityLabel={`Ir a ${label}`}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isFocused }}
             />
           );
         })}
@@ -100,21 +111,31 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
   },
   tabbar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
-    borderTopWidth: 0.8,
-    borderColor: "rgba(0, 0, 0, 0.08)",
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+    position: "relative",
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   indicator: {
     position: "absolute",
-    height: 3,
+    top: 0,
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    paddingTop: 4,
+  },
+  indicatorPill: {
+    width: 32,
+    height: 4,
     backgroundColor: "#3B82F6",
     borderRadius: 2,
-    top: 8,
   },
 });

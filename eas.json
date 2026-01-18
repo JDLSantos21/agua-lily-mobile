@@ -11,13 +11,14 @@
     },
     "preview": {
       "distribution": "internal",
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://agua-lily-api-dxqa3.ondigitalocean.app/api"
-      },
       "channel": "preview"
     },
     "production": {
       "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://agua-lily-api-dxqa3.ondigitalocean.app/api"
+      },
+      "environment": "production",
       "channel": "production"
     }
   },

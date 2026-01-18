@@ -1,110 +1,232 @@
-import { Text, View, TouchableOpacity } from "react-native";
+import { Text, View, Pressable } from "react-native";
 import { Equipment } from "../types";
-import { User, MapPin, Settings, Gauge } from "lucide-react-native";
 import { Link } from "expo-router";
-import {
-  getEquipmentStatusBadgeBg,
-  getEquipmentStatusBadgeColor,
-} from "../utils/equipmentBadgeColor";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+
+// Status badge colors
+const getStatusConfig = (status: string) => {
+  const configs: Record<string, { bg: string; text: string; label: string }> = {
+    activo: { bg: "#D1FAE5", text: "#065F46", label: "Activo" },
+    inactivo: { bg: "#FEE2E2", text: "#991B1B", label: "Inactivo" },
+    mantenimiento: { bg: "#FEF3C7", text: "#92400E", label: "Mantenim." },
+    reparacion: { bg: "#DBEAFE", text: "#1E40AF", label: "Reparación" },
+  };
+  return configs[status?.toLowerCase()] || configs.activo;
+};
 
 export default function EquipmentCard({
   equipment,
 }: {
   equipment?: Equipment;
 }) {
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const statusConfig = getStatusConfig(equipment?.status || "activo");
+  // Entrega pendiente: tiene assigned_date pero no tiene location_created_at
+  const isPendingDelivery =
+    equipment?.assigned_date && !equipment?.location_created_at;
+
   return (
     <Link href={`/equipments/${equipment?.id}`} asChild>
-      <TouchableOpacity activeOpacity={0.7}>
-        <View className="overflow-hidden bg-white shadow-sm rounded-2xl">
-          {/* Header del card */}
-          <View className="p-4 pb-3">
-            <View className="flex-row items-start justify-between mb-3">
-              <View className="flex-1">
-                <View className="flex-row items-center mb-1">
-                  <View className="items-center justify-center w-8 h-8 mr-3 bg-gray-100 rounded-full">
-                    <Ionicons name="settings" size={16} color="#6B7280" />
-                  </View>
-                  <Text className="text-sm font-medium tracking-wide text-gray-500 uppercase">
-                    {equipment.type}
-                  </Text>
-                </View>
-                <Text className="text-lg font-bold text-gray-900 ml-11">
-                  {equipment.model}
+      <Pressable
+        onPress={handlePress}
+        style={({ pressed }) => ({
+          opacity: pressed ? 0.95 : 1,
+          transform: [{ scale: pressed ? 0.99 : 1 }],
+        })}
+        accessibilityLabel={`Equipo ${equipment?.model}, tipo ${equipment?.type}`}
+        accessibilityRole="button"
+      >
+        <View
+          style={{
+            backgroundColor: "white",
+            borderRadius: 16,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 3,
+            marginHorizontal: 2, // Slight margin
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#FFFFFF",
+              borderRadius: 16,
+              overflow: "hidden",
+            }}
+          >
+            {/* Header: Tipo/Modelo y Status */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                padding: 14,
+                paddingBottom: 10,
+              }}
+            >
+              <View style={{ flex: 1, paddingRight: 10 }}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: "500",
+                    color: "#9CA3AF",
+                    textTransform: "uppercase",
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  {equipment?.type}
                 </Text>
-                <Text className="text-sm text-gray-600 ml-11">
-                  #{equipment.serial_number || "Sin serie"}
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: 17,
+                    fontWeight: "600",
+                    color: "#111827",
+                    marginTop: 2,
+                  }}
+                >
+                  {equipment?.model}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: "#9CA3AF",
+                    marginTop: 2,
+                  }}
+                >
+                  #{equipment?.serial_number || "Sin serie"}
                 </Text>
               </View>
+
+              {/* Badge de estado */}
               <View
-                className={`px-3 py-1 ${getEquipmentStatusBadgeBg(
-                  equipment.status
-                )} rounded-full`}
+                style={{
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: 10,
+                  backgroundColor: statusConfig.bg,
+                }}
               >
                 <Text
-                  className={`text-xs font-semibold ${getEquipmentStatusBadgeColor(
-                    equipment.status
-                  )}`}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: "600",
+                    color: statusConfig.text,
+                  }}
                 >
-                  {equipment.status.toUpperCase()}
+                  {statusConfig.label}
                 </Text>
               </View>
             </View>
 
-            {/* Especificaciones */}
-            <View className="flex-row items-center justify-between px-4 py-3 mb-3 bg-gray-50 rounded-xl">
-              <View className="flex-row items-center flex-1">
-                <Settings size={14} color="#6B7280" />
-                <Text className="ml-2 text-sm text-gray-600">
-                  {equipment.model}
-                </Text>
-              </View>
-              <View className="flex-row items-center">
-                <Gauge size={14} color="#6B7280" />
-                <Text className="ml-2 text-sm font-medium text-gray-900">
-                  {equipment.capacity}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Información del cliente */}
-          <View className="px-4 pb-4">
-            {!equipment.current_customer_id ? (
-              <View className="flex-row items-center px-3 py-2 border rounded-lg bg-amber-50 border-amber-200">
-                <Ionicons name="information-circle" size={16} color="#F59E0B" />
-                <Text className="flex-1 ml-2 text-sm text-amber-700">
-                  Sin cliente asociado
-                </Text>
-              </View>
-            ) : (
-              <View className="gap-2">
-                {/* Nombre del cliente */}
-                <View className="flex-row items-center px-3 py-2 rounded-lg bg-blue-50">
-                  <View className="items-center justify-center w-6 h-6 bg-blue-100 rounded-full">
-                    <User size={12} color="#3B82F6" />
-                  </View>
-                  <Text className="flex-1 ml-3 text-sm font-medium text-gray-900">
-                    {equipment.customer_name || "Cliente sin nombre"}
+            {/* Cliente o Alerta */}
+            <View style={{ paddingHorizontal: 14, paddingBottom: 10 }}>
+              {equipment?.current_customer_id ? (
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Ionicons name="person-outline" size={14} color="#9CA3AF" />
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      flex: 1,
+                      marginLeft: 6,
+                      fontSize: 13,
+                      color: "#6B7280",
+                    }}
+                  >
+                    {equipment?.customer_name || "Cliente"}
                   </Text>
                 </View>
+              ) : (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: "#FEF3C7",
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 8,
+                  }}
+                >
+                  <Ionicons name="alert-circle" size={14} color="#D97706" />
+                  <Text
+                    style={{
+                      marginLeft: 6,
+                      fontSize: 12,
+                      fontWeight: "500",
+                      color: "#92400E",
+                    }}
+                  >
+                    Sin cliente asociado
+                  </Text>
+                </View>
+              )}
+            </View>
 
-                {/* Dirección */}
-                {equipment.customer_address && (
-                  <View className="flex-row items-start px-3 py-2 rounded-lg bg-gray-50">
-                    <View className="items-center justify-center w-6 h-6 bg-gray-100 rounded-full mt-0.5">
-                      <MapPin size={12} color="#6B7280" />
-                    </View>
-                    <Text className="flex-1 ml-3 text-sm leading-5 text-gray-700">
-                      {equipment.customer_address}
+            {/* Footer: Capacidad, alerta GPS y chevron */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                backgroundColor: "#FAFAFA",
+                borderTopWidth: 1,
+                borderTopColor: "#F3F4F6",
+              }}
+            >
+              <View
+                style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
+              >
+                <Ionicons name="water-outline" size={14} color="#9CA3AF" />
+                <Text
+                  style={{
+                    marginLeft: 5,
+                    fontSize: 13,
+                    color: "#6B7280",
+                  }}
+                >
+                  {equipment?.capacity || "N/A"}
+                </Text>
+
+                {/* Indicador de entrega pendiente */}
+                {isPendingDelivery && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginLeft: 12,
+                      backgroundColor: "#FEF3C7",
+                      paddingHorizontal: 8,
+                      paddingVertical: 3,
+                      borderRadius: 6,
+                    }}
+                  >
+                    <Ionicons name="time" size={12} color="#D97706" />
+                    <Text
+                      style={{
+                        marginLeft: 4,
+                        fontSize: 11,
+                        fontWeight: "500",
+                        color: "#92400E",
+                      }}
+                    >
+                      Entrega pendiente
                     </Text>
                   </View>
                 )}
               </View>
-            )}
+
+              <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
+            </View>
           </View>
         </View>
-      </TouchableOpacity>
+      </Pressable>
     </Link>
   );
 }

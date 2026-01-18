@@ -10,14 +10,16 @@ import {
   Text,
   View,
   Modal,
-  Alert,
 } from "react-native";
 import EquipmentsListError from "../../../src/features/equipments/components/EquipmentsListError";
 import QRScanner from "@/features/camera/QRScanner";
 import { useState } from "react";
 import { router } from "expo-router";
+import * as Haptics from "expo-haptics";
+import { useAlert } from "@/shared/components/ui/Alert";
 
 export default function EquipmentsScreen() {
+  const alert = useAlert();
   const { data: equipments, isLoading, isError, refetch } = useEquipments();
   const [showQRScanner, setShowQRScanner] = useState(false);
 
@@ -25,7 +27,7 @@ export default function EquipmentsScreen() {
     return (
       <Loading
         title="Cargando equipos"
-        message="Por favor, espera mientras cargamos la lista de equipos."
+        message="Por favor, espera un momento..."
         size="large"
         showProgress={false}
       />
@@ -38,52 +40,152 @@ export default function EquipmentsScreen() {
     setShowQRScanner(false);
     if (!data) return;
     if (isNaN(Number(data))) {
-      Alert.alert("Código QR inválido");
+      alert.error("Error", "Código QR inválido");
       return;
     }
     router.push(`/equipments/${data}`);
   };
 
+  const handleOpenScanner = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowQRScanner(true);
+  };
+
   const equipmentCount = equipments?.data?.length || 0;
 
-  return (
-    <View style={{ flex: 1 }} className="bg-gray-50">
-      {/* Botón QR flotante */}
-      <Pressable
-        className="absolute z-10 bottom-6 right-6 active:scale-95"
-        onPress={() => setShowQRScanner(true)}
+  // Contar equipos que necesitan atención (sin GPS)
+  const needsAttentionCount =
+    equipments?.data?.filter((eq) => !eq.location_created_at).length || 0;
+
+  const renderHeader = () => (
+    <View style={{ paddingHorizontal: 12, paddingTop: 20, paddingBottom: 12 }}>
+      {/* Título */}
+      <View style={{ marginBottom: 16 }}>
+        <Text style={{ fontSize: 24, fontWeight: "700", color: "#111827" }}>
+          Equipos
+        </Text>
+      </View>
+
+      {/* Contador minimalista */}
+      <View
         style={{
-          shadowColor: "#3B82F6",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.3,
-          shadowRadius: 12,
-          elevation: 8,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingVertical: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: "#F3F4F6",
         }}
       >
-        <View className="relative">
-          {/* Botón principal */}
-          <View className="items-center justify-center w-16 h-16 bg-blue-600 rounded-full">
-            {/* Anillo interno con brillo */}
-            <View className="items-center justify-center bg-blue-500 border rounded-full w-14 h-14 border-blue-400/40">
-              <Ionicons name="qr-code" size={28} color="white" />
-            </View>
-          </View>
-
-          {/* Badge indicador activo */}
-          <View className="absolute items-center justify-center w-5 h-5 bg-green-400 border-2 border-white rounded-full -top-1 -right-1">
-            <View className="w-2 h-2 bg-white rounded-full" />
-          </View>
-
-          {/* Efecto de resplandor */}
-          <View
-            className="absolute inset-0 rounded-full bg-blue-400/20"
+        <Text style={{ fontSize: 15, color: "#6B7280" }}>En tu inventario</Text>
+        <View
+          style={{
+            backgroundColor: "#F3F4F6",
+            paddingHorizontal: 12,
+            paddingVertical: 4,
+            borderRadius: 12,
+          }}
+        >
+          <Text
             style={{
-              transform: [{ scale: 1.3 }],
+              fontSize: 15,
+              fontWeight: "600",
+              color: "#4B5563",
             }}
-          />
+          >
+            {equipmentCount}
+          </Text>
         </View>
-      </Pressable>
+      </View>
 
+      {/* Alerta si hay equipos pendientes de GPS */}
+      {needsAttentionCount > 0 && (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: "#FEF3C7",
+            padding: 12,
+            borderRadius: 12,
+            marginTop: 12,
+          }}
+        >
+          <Ionicons name="alert-circle" size={18} color="#D97706" />
+          <Text
+            style={{
+              marginLeft: 8,
+              fontSize: 14,
+              color: "#92400E",
+              flex: 1,
+            }}
+          >
+            {needsAttentionCount}{" "}
+            {needsAttentionCount === 1
+              ? "equipo requiere"
+              : "equipos requieren"}{" "}
+            ubicación GPS
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+
+  const renderEmptyState = () => (
+    <View
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: 32,
+        paddingVertical: 48,
+      }}
+    >
+      <View
+        style={{
+          width: 88,
+          height: 88,
+          borderRadius: 44,
+          backgroundColor: "#F3F4F6",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: 24,
+        }}
+      >
+        <Ionicons name="hardware-chip-outline" size={44} color="#9CA3AF" />
+      </View>
+      <Text
+        style={{
+          fontSize: 22,
+          fontWeight: "600",
+          color: "#111827",
+          textAlign: "center",
+          marginBottom: 8,
+        }}
+      >
+        No hay equipos
+      </Text>
+      <Text
+        style={{
+          fontSize: 16,
+          color: "#6B7280",
+          textAlign: "center",
+          lineHeight: 24,
+          marginBottom: 24,
+        }}
+      >
+        Escanea un código QR para ver los detalles de un equipo
+      </Text>
+      <Button
+        onPress={refetch}
+        variant="secondary"
+        text="Actualizar"
+        icon="refresh"
+      />
+    </View>
+  );
+
+  return (
+    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
       {/* Modal del QR Scanner */}
       <Modal
         visible={showQRScanner}
@@ -96,63 +198,66 @@ export default function EquipmentsScreen() {
           onClose={() => setShowQRScanner(false)}
         />
       </Modal>
-      {/* Header */}
-      <View className="px-4 pt-6 pb-4 bg-white border-b border-gray-100">
-        <View className="flex-row items-center justify-between">
-          <View className="flex-1">
-            <Text className="text-2xl font-bold text-gray-900">Equipos</Text>
-            <Text className="mt-1 text-sm text-gray-500">
-              {equipmentCount} {equipmentCount === 1 ? "equipo" : "equipos"}{" "}
-              registrados
-            </Text>
-          </View>
-          <View className="items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
-            <Ionicons name="settings-outline" size={20} color="#3B82F6" />
-          </View>
-        </View>
-      </View>
 
       {/* Lista de equipos */}
-      {equipmentCount === 0 ? (
-        <View className="items-center justify-center flex-1 px-6">
-          <View className="items-center justify-center w-20 h-20 mb-4 bg-gray-100 rounded-full">
-            <Ionicons name="hardware-chip-outline" size={32} color="#6B7280" />
+      <FlatList
+        showsVerticalScrollIndicator={false}
+        data={equipments?.data || []}
+        ListHeaderComponent={renderHeader}
+        renderItem={({ item }) => (
+          <View style={{ paddingHorizontal: 12 }}>
+            <EquipmentCard equipment={item} />
           </View>
-          <Text className="mb-2 text-xl font-semibold text-gray-900">
-            No hay equipos
-          </Text>
-          <Text className="mb-6 text-center text-gray-600">
-            Aún no se han registrado equipos en el sistema.
-          </Text>
-          <Button
-            onPress={refetch}
-            variant="primary"
-            text="Actualizar"
-            icon="refresh"
+        )}
+        keyExtractor={(item) => item.id.toString()}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refetch}
+            colors={["#3B82F6"]}
+            tintColor="#3B82F6"
           />
-        </View>
-      ) : (
-        <FlatList
-          showsVerticalScrollIndicator={false}
-          data={equipments.data || []}
-          renderItem={({ item }) => <EquipmentCard equipment={item} />}
-          keyExtractor={(item) => item.id.toString()}
-          refreshControl={
-            <RefreshControl
-              refreshing={isLoading}
-              onRefresh={refetch}
-              colors={["#3B82F6"]}
-              tintColor="#3B82F6"
-            />
-          }
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingTop: 16,
-            paddingBottom: 20,
-          }}
-          ItemSeparatorComponent={() => <View className="h-3" />}
-        />
-      )}
+        }
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingBottom: 100,
+        }}
+        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+        ListEmptyComponent={renderEmptyState}
+      />
+
+      {/* Botón QR flotante */}
+      <Pressable
+        onPress={handleOpenScanner}
+        style={{
+          position: "absolute",
+          bottom: 24,
+          right: 16,
+        }}
+        accessibilityLabel="Escanear código QR"
+        accessibilityRole="button"
+      >
+        {({ pressed }) => (
+          <View
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 16,
+              backgroundColor: pressed ? "#2563EB" : "#3B82F6",
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#3B82F6",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 6,
+              transform: [{ scale: pressed ? 0.95 : 1 }],
+            }}
+          >
+            <Ionicons name="qr-code" size={26} color="#FFFFFF" />
+          </View>
+        )}
+      </Pressable>
     </View>
   );
 }

@@ -1,39 +1,46 @@
-import InfoItem from "@/features/equipments/components/InfoItem";
-import { useEquipmentById } from "@/features/equipments/hooks/useEquipments";
-import { useEquipmentsLocation } from "@/features/equipments/hooks/useEquipmentsLocation";
 import {
-  getEquipmentStatusBadgeBg,
-  getEquipmentStatusBadgeColor,
-} from "@/features/equipments/utils/equipmentBadgeColor";
+  useEquipmentById,
+  useRegisterEquipmentDelivery,
+} from "@/features/equipments/hooks/useEquipments";
+import { useEquipmentsLocation } from "@/features/equipments/hooks/useEquipmentsLocation";
 import Loading from "@/shared/components/Loading";
 import Button from "@/shared/components/ui/Button";
 import formatPhoneNumber from "@/shared/utils/format-number";
-
 import { openInMaps } from "@/shared/utils/maps";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router";
-import {
-  CalendarDays,
-  Gauge,
-  MapPin,
-  Phone,
-  Settings,
-  User,
-} from "lucide-react-native";
+import { Stack, useLocalSearchParams } from "expo-router";
 import {
   View,
   Text,
   ScrollView,
   Linking,
   RefreshControl,
-  Alert,
+  TouchableOpacity,
+  Modal,
 } from "react-native";
 import EquipmentError from "@/features/equipments/components/EquipmentError";
 import EquipmentNotFound from "@/features/equipments/components/EquipmentNotFound";
 import formatDate from "@/shared/utils/format-date";
+import * as Haptics from "expo-haptics";
+import { useState } from "react";
+import QRScanner from "@/features/camera/QRScanner";
+import { useAlert } from "@/shared/components/ui/Alert";
+import * as Location from "expo-location";
+
+// Status config
+const getStatusConfig = (status: string) => {
+  const configs: Record<string, { bg: string; text: string; label: string }> = {
+    activo: { bg: "#D1FAE5", text: "#065F46", label: "Activo" },
+    inactivo: { bg: "#FEE2E2", text: "#991B1B", label: "Inactivo" },
+    mantenimiento: { bg: "#FEF3C7", text: "#92400E", label: "Mantenimiento" },
+    reparacion: { bg: "#DBEAFE", text: "#1E40AF", label: "Reparación" },
+  };
+  return configs[status?.toLowerCase()] || configs.activo;
+};
 
 export default function EquipmentDetails() {
   const { id } = useLocalSearchParams();
+  const alert = useAlert();
   const equipmentId = Array.isArray(id) ? Number(id[0]) : Number(id);
   const { saveLocation, isLoading: isSavingLocation } = useEquipmentsLocation();
   const {
@@ -43,7 +50,12 @@ export default function EquipmentDetails() {
     refetch,
   } = useEquipmentById(equipmentId);
 
+  const [showQRScanner, setShowQRScanner] = useState(false);
+
+  const registerDeliveryMutation = useRegisterEquipmentDelivery();
+
   const handleGoToLocation = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     openInMaps(equipment?.data?.customer_address, {
       lat: equipment?.data?.latitude,
       lng: equipment?.data?.longitude,
@@ -51,33 +63,183 @@ export default function EquipmentDetails() {
   };
 
   const handleSaveLocation = async () => {
-    Alert.alert(
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    alert.confirm(
       "Guardar ubicación",
-      "¿Deseas guardar la ubicación GPS actual como dirección exacta del equipo? Esta acción actualizará la ubicación del equipo y la guardará en el sistema.",
-      [
-        { text: "Cancelar", style: "destructive" },
-        {
-          text: "Guardar",
-          style: "default",
-          onPress: async () => {
-            if (equipmentId) {
-              await saveLocation(equipmentId);
-            }
-          },
-        },
-      ],
-      {
-        cancelable: true,
-      }
+      "¿Deseas guardar la ubicación GPS actual?",
+      async () => {
+        if (equipmentId) {
+          await saveLocation(equipmentId);
+          refetch();
+        }
+      },
     );
   };
 
+  // Manejar escaneo de QR para completar entrega
+  const handleQRScan = async (scannedData: string) => {
+    setShowQRScanner(false);
+
+    if (!scannedData) return;
+
+    console.log("QR escaneado:", scannedData);
+
+    // Verificar que el QR escaneado coincida con el serial number del equipo
+    if (scannedData !== equipment.data.serial_number) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      alert.error(
+        "QR incorrecto",
+        "El código QR escaneado no corresponde a este equipo. Asegúrate de escanear el QR correcto.",
+      );
+      return;
+    }
+
+    // Código coincide - guardar ubicación para completar entrega
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        alert.error(
+          "Permiso denegado",
+          "Se necesitan permisos de ubicación para completar la entrega",
+        );
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+
+      registerDeliveryMutation.mutate(
+        {
+          id: equipmentId,
+          latitude,
+          longitude,
+        },
+        {
+          onSuccess: (response) => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            alert.success(
+              "Entrega completada",
+              "La entrega del equipo se ha registrado correctamente.",
+              () => refetch(),
+            );
+          },
+          onError: (error) => {
+            alert.error(
+              "Error",
+              "No se pudo registrar la entrega. Inténtalo de nuevo.",
+            );
+            console.error(error);
+          },
+        },
+      );
+    } catch (error) {
+      alert.error("Error", "Ocurrió un error al obtener la ubicación.");
+      console.error(error);
+    }
+  };
+
+  const handleOpenDeliveryScanner = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowQRScanner(true);
+  };
+
+  // Card component
+  const Card = ({ children, style = {} }) => (
+    <View
+      style={{
+        backgroundColor: "#FFFFFF",
+        borderRadius: 20,
+        marginHorizontal: 16,
+        marginBottom: 16,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 3,
+        ...style,
+      }}
+    >
+      {children}
+    </View>
+  );
+
+  // Section header
+  const SectionHeader = ({ icon, iconColor, iconBg, title }) => (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 20,
+        paddingTop: 20,
+        paddingBottom: 16,
+      }}
+    >
+      <View
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: 12,
+          backgroundColor: iconBg,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Ionicons name={icon} size={22} color={iconColor} />
+      </View>
+      <Text
+        style={{
+          marginLeft: 14,
+          fontSize: 18,
+          fontWeight: "600",
+          color: "#111827",
+          flex: 1,
+        }}
+      >
+        {title}
+      </Text>
+    </View>
+  );
+
+  const statusConfig = getStatusConfig(equipment?.data?.status || "activo");
+
+  // Determinar si está pendiente de entrega (asignado pero sin ubicación)
+  const isPendingDelivery =
+    equipment?.data?.assigned_date && !equipment?.data?.location_created_at;
+
   return (
-    <View style={{ flex: 1 }} className="bg-gray-50">
+    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: `Equipo #${equipmentId}`,
+          headerTitleStyle: {
+            color: "#111827",
+            fontSize: 17,
+            fontWeight: "600",
+          },
+          headerTintColor: "#3B82F6",
+          headerStyle: { backgroundColor: "#FFFFFF" },
+          headerShadowVisible: false,
+        }}
+      />
+
+      {/* Modal QR Scanner para completar entrega */}
+      <Modal
+        visible={showQRScanner}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        statusBarTranslucent
+      >
+        <QRScanner
+          onCodeScanned={handleQRScan}
+          onClose={() => setShowQRScanner(false)}
+        />
+      </Modal>
+
       {isLoading ? (
         <Loading
           title="Cargando equipo"
-          message="Por favor, espera mientras cargamos los detalles del equipo."
+          message="Por favor, espera..."
           size="large"
           showProgress={false}
         />
@@ -86,271 +248,472 @@ export default function EquipmentDetails() {
       ) : !equipment?.data ? (
         <EquipmentNotFound onRetry={refetch} />
       ) : (
-        <ScrollView
-          className="flex-1"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          refreshControl={
-            <RefreshControl refreshing={isLoading} onRefresh={refetch} />
-          }
-        >
-          {/* Header con Status y Número de Serie */}
-          <View className="mx-4 mt-6 mb-8">
-            <View className="flex-row items-center justify-between mb-4">
-              <View className="flex-1">
-                <Text className="text-sm font-medium tracking-wide text-gray-500 uppercase">
-                  {equipment?.data?.type}
-                </Text>
-                <Text className="mt-1 text-2xl font-bold text-gray-900">
-                  #{equipment?.data?.serial_number || "Sin serie"}
-                </Text>
-              </View>
+        <>
+          <ScrollView
+            style={{ flex: 1 }}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingTop: 16, paddingBottom: 32 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={isLoading}
+                onRefresh={refetch}
+                colors={["#3B82F6"]}
+                tintColor="#3B82F6"
+              />
+            }
+          >
+            {/* ALERTA: Entrega pendiente */}
+            {isPendingDelivery && (
               <View
-                className={`px-4 py-2 ${getEquipmentStatusBadgeBg(
-                  equipment?.data?.status
-                )} rounded-full`}
+                style={{
+                  marginHorizontal: 16,
+                  marginBottom: 16,
+                  padding: 20,
+                  backgroundColor: "#FEF3C7",
+                  borderRadius: 20,
+                  borderWidth: 2,
+                  borderColor: "#FCD34D",
+                }}
               >
-                <Text
-                  className={`text-sm font-semibold ${getEquipmentStatusBadgeColor(
-                    equipment?.data?.status
-                  )}`}
+                <View
+                  style={{ flexDirection: "row", alignItems: "flex-start" }}
                 >
-                  {equipment?.data?.status?.toUpperCase()}
-                </Text>
-              </View>
-            </View>
-
-            {/* Información básica del equipo */}
-            <View className="p-4 bg-white shadow-sm rounded-2xl">
-              <View className="flex-row items-center justify-between mb-3">
-                <InfoItem
-                  label="Modelo"
-                  value={equipment?.data?.model}
-                  icon={<Settings size={16} color="#6B7280" />}
-                />
-                <InfoItem
-                  label="Capacidad"
-                  value={equipment?.data?.capacity}
-                  icon={<Gauge size={16} color="#6B7280" />}
-                />
-              </View>
-
-              <View className="pt-3 border-t border-gray-100">
-                <InfoItem
-                  label="Ubicación actual"
-                  value={equipment?.data?.customer_address || "No especificado"}
-                  icon={<MapPin size={16} color="#6B7280" />}
-                />
-              </View>
-
-              <View className="pt-3 mt-3 border-t border-gray-100">
-                <InfoItem
-                  label="Registrado"
-                  value={formatDate(equipment?.data?.created_at)}
-                  icon={<CalendarDays size={16} color="#6B7280" />}
-                />
-              </View>
-            </View>
-          </View>
-
-          {/* Información del Cliente Asociado */}
-          {equipment?.data?.current_customer_id && (
-            <View className="mx-4 mb-6 bg-white shadow-sm rounded-3xl">
-              <View className="p-6">
-                <View className="flex-row items-center mb-5">
-                  <View className="items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
-                    <User size={20} color="#3B82F6" />
+                  <View
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 14,
+                      backgroundColor: "#F59E0B",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Ionicons name="time" size={26} color="#FFFFFF" />
                   </View>
-                  <Text className="ml-4 text-lg font-semibold text-gray-900">
-                    Cliente asociado
-                  </Text>
+                  <View style={{ flex: 1, marginLeft: 14 }}>
+                    <Text
+                      style={{
+                        fontSize: 17,
+                        fontWeight: "700",
+                        color: "#92400E",
+                        marginBottom: 4,
+                      }}
+                    >
+                      Entrega pendiente
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        color: "#B45309",
+                        lineHeight: 20,
+                        marginBottom: 16,
+                      }}
+                    >
+                      Este equipo está asignado pero aún no se ha completado la
+                      entrega. Escanea el código QR del equipo para confirmar.
+                    </Text>
+                    <Button
+                      onPress={handleOpenDeliveryScanner}
+                      variant="warning"
+                      text="Completar entrega"
+                      icon="qr-code"
+                      fullWidth
+                      size="lg"
+                    />
+                  </View>
                 </View>
+              </View>
+            )}
 
-                <View className="space-y-4">
-                  <View>
-                    <Text className="mb-1 text-2xl font-bold text-gray-900">
-                      {equipment?.data?.customer_name || "No especificado"}
+            {/* Header con info básica */}
+            <Card>
+              <View style={{ padding: 20 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 16,
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        fontWeight: "500",
+                        color: "#9CA3AF",
+                        textTransform: "uppercase",
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      {equipment?.data?.type}
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 20,
+                        fontWeight: "700",
+                        color: "#111827",
+                        marginTop: 4,
+                      }}
+                    >
+                      {equipment?.data?.model}
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        color: "#6B7280",
+                        marginTop: 2,
+                      }}
+                    >
+                      #{equipment?.data?.serial_number || "Sin serie"}
                     </Text>
                   </View>
+                  <View
+                    style={{
+                      paddingHorizontal: 14,
+                      paddingVertical: 6,
+                      borderRadius: 12,
+                      backgroundColor: statusConfig.bg,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: "600",
+                        color: statusConfig.text,
+                      }}
+                    >
+                      {statusConfig.label}
+                    </Text>
+                  </View>
+                </View>
 
+                {/* Capacidad */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    backgroundColor: "#F9FAFB",
+                    borderRadius: 14,
+                    padding: 14,
+                  }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Ionicons name="water" size={18} color="#3B82F6" />
+                    <Text
+                      style={{
+                        marginLeft: 8,
+                        fontSize: 15,
+                        fontWeight: "600",
+                        color: "#111827",
+                      }}
+                    >
+                      {equipment?.data?.capacity || "N/A"}
+                    </Text>
+                    <Text
+                      style={{ marginLeft: 4, fontSize: 14, color: "#6B7280" }}
+                    >
+                      de capacidad
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </Card>
+
+            {/* Cliente asociado */}
+            {equipment?.data?.current_customer_id && (
+              <Card>
+                <SectionHeader
+                  icon="person"
+                  iconColor="#3B82F6"
+                  iconBg="#DBEAFE"
+                  title="Cliente"
+                />
+                <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
+                  <Text
+                    style={{
+                      fontSize: 20,
+                      fontWeight: "700",
+                      color: "#111827",
+                      marginBottom: 14,
+                    }}
+                  >
+                    {equipment?.data?.customer_name || "No especificado"}
+                  </Text>
+
+                  {/* Teléfono */}
                   {equipment?.data?.customer_phone && (
-                    <View className="flex-row items-center px-4 py-3 mb-2 bg-gray-50 rounded-2xl">
-                      <View className="items-center justify-center w-8 h-8 bg-green-100 rounded-full">
-                        <Phone size={16} color="#10B981" />
+                    <TouchableOpacity
+                      onPress={() =>
+                        Linking.openURL(
+                          `tel:${equipment?.data?.customer_phone}`,
+                        )
+                      }
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        padding: 14,
+                        backgroundColor: "#F0FDF4",
+                        borderRadius: 14,
+                        marginBottom: 10,
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 10,
+                          backgroundColor: "#10B981",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Ionicons name="call" size={18} color="#FFFFFF" />
                       </View>
-                      <Text className="ml-3 text-base font-medium text-gray-900">
+                      <Text
+                        style={{
+                          marginLeft: 12,
+                          fontSize: 16,
+                          fontWeight: "600",
+                          color: "#065F46",
+                        }}
+                      >
                         {formatPhoneNumber(equipment?.data?.customer_phone)}
+                      </Text>
+                      <Ionicons
+                        name="chevron-forward"
+                        size={20}
+                        color="#10B981"
+                        style={{ marginLeft: "auto" }}
+                      />
+                    </TouchableOpacity>
+                  )}
+
+                  {/* Dirección */}
+                  {equipment?.data?.customer_address && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "flex-start",
+                        padding: 14,
+                        backgroundColor: "#FFF7ED",
+                        borderRadius: 14,
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 10,
+                          backgroundColor: "#F97316",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Ionicons name="location" size={18} color="#FFFFFF" />
+                      </View>
+                      <Text
+                        style={{
+                          flex: 1,
+                          marginLeft: 12,
+                          fontSize: 15,
+                          lineHeight: 22,
+                          color: "#9A3412",
+                        }}
+                      >
+                        {equipment?.data?.customer_address}
                       </Text>
                     </View>
                   )}
-
-                  <View className="pt-3 border-t border-gray-100">
-                    <InfoItem
-                      label="Fecha de asignación"
-                      value={
-                        formatDate(
-                          equipment?.data?.assigned_date,
-                          "DD MMMM, YYYY"
-                        ) || "No especificado"
-                      }
-                      icon={<CalendarDays size={16} color="#6B7280" />}
-                    />
-                  </View>
                 </View>
-              </View>
-            </View>
-          )}
+              </Card>
+            )}
 
-          {/* Ubicación GPS   */}
-          {equipment?.data?.location_created_at && (
-            <View className="mx-4 mb-6 bg-white shadow-sm rounded-3xl">
-              <View className="p-6">
-                <View className="flex-row items-center mb-5">
-                  <View className="items-center justify-center w-10 h-10 bg-green-100 rounded-full">
-                    <MapPin size={20} color="#10B981" />
-                  </View>
-                  <Text className="ml-4 text-lg font-semibold text-gray-900">
-                    Ubicación GPS
-                  </Text>
-                </View>
-
-                <View className="space-y-4">
-                  <View className="flex-row items-center justify-between">
-                    <InfoItem
-                      label="Latitud"
-                      value={equipment?.data?.latitude}
-                      icon={<MapPin size={16} color="#6B7280" />}
-                    />
-                    <InfoItem
-                      label="Longitud"
-                      value={equipment?.data?.longitude}
-                      icon={<MapPin size={16} color="#6B7280" />}
-                    />
-                  </View>
-
-                  <View className="pt-3 border-t border-gray-100">
-                    <InfoItem
-                      label="Guardado el"
-                      value={formatDate(equipment?.data?.location_created_at)}
-                      icon={<CalendarDays size={16} color="#6B7280" />}
-                    />
-                  </View>
-
-                  <View className="p-4 mt-4 bg-green-50 rounded-2xl">
-                    <View className="flex-row items-center justify-between">
-                      <View className="flex-1">
-                        <View className="flex-row items-center mb-2">
-                          <Ionicons
-                            name="checkmark-circle"
-                            size={18}
-                            color="#10B981"
-                          />
-                          <Text className="ml-2 text-sm font-medium text-green-700">
-                            Ubicación GPS guardada
+            {/* GPS Status - solo mostrar si ya fue entregado */}
+            {!isPendingDelivery && (
+              <Card style={{ marginBottom: 0 }}>
+                <SectionHeader
+                  icon="location"
+                  iconColor={
+                    equipment?.data?.location_created_at ? "#10B981" : "#F59E0B"
+                  }
+                  iconBg={
+                    equipment?.data?.location_created_at ? "#D1FAE5" : "#FEF3C7"
+                  }
+                  title="Ubicación GPS"
+                />
+                <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
+                  {equipment?.data?.location_created_at ? (
+                    <View
+                      style={{
+                        padding: 14,
+                        backgroundColor: "#F0FDF4",
+                        borderRadius: 14,
+                      }}
+                    >
+                      <View
+                        style={{ flexDirection: "row", alignItems: "center" }}
+                      >
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={20}
+                          color="#10B981"
+                        />
+                        <View style={{ flex: 1, marginLeft: 10 }}>
+                          <Text
+                            style={{
+                              fontSize: 14,
+                              fontWeight: "500",
+                              color: "#065F46",
+                            }}
+                          >
+                            Ubicación guardada
+                          </Text>
+                          <Text style={{ fontSize: 12, color: "#10B981" }}>
+                            {formatDate(equipment?.data?.location_created_at)}
                           </Text>
                         </View>
-                        <Text className="text-xs text-green-600">
-                          Si es necesario, puedes actualizar la ubicación GPS
-                          del equipo en cualquier momento.
-                        </Text>
+                        <TouchableOpacity
+                          onPress={handleSaveLocation}
+                          disabled={isSavingLocation}
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 12,
+                            backgroundColor: "#10B981",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Ionicons name="refresh" size={20} color="#FFFFFF" />
+                        </TouchableOpacity>
                       </View>
-
-                      <Button
-                        onPress={handleSaveLocation}
-                        variant="success"
-                        icon="refresh"
-                        disabled={isSavingLocation}
-                        className="rounded-full"
-                        pressedOpacity={0.5}
-                      />
                     </View>
-                  </View>
+                  ) : (
+                    <View
+                      style={{
+                        padding: 14,
+                        backgroundColor: "#FEF3C7",
+                        borderRadius: 14,
+                        borderWidth: 1,
+                        borderColor: "#FCD34D",
+                      }}
+                    >
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "flex-start",
+                        }}
+                      >
+                        <Ionicons name="warning" size={20} color="#D97706" />
+                        <View style={{ flex: 1, marginLeft: 10 }}>
+                          <Text
+                            style={{
+                              fontSize: 14,
+                              fontWeight: "500",
+                              color: "#92400E",
+                              marginBottom: 4,
+                            }}
+                          >
+                            GPS no guardado
+                          </Text>
+                          <Text
+                            style={{
+                              fontSize: 13,
+                              color: "#B45309",
+                              marginBottom: 12,
+                            }}
+                          >
+                            Guarda la ubicación exacta del equipo
+                          </Text>
+                          <Button
+                            onPress={handleSaveLocation}
+                            variant="location"
+                            text="Guardar ubicación"
+                            icon="location"
+                            disabled={isSavingLocation}
+                            size="sm"
+                          />
+                        </View>
+                      </View>
+                    </View>
+                  )}
                 </View>
-              </View>
-            </View>
-          )}
+              </Card>
+            )}
 
-          {!equipment?.data?.location_created_at && (
-            <View className="mx-4 mb-6">
-              <View className="p-4 border border-yellow-200 bg-yellow-50 rounded-2xl">
-                <View className="flex-row items-start">
-                  <Ionicons name="warning" size={20} color="#F59E0B" />
-                  <View className="flex-1 ml-3">
-                    <Text className="mb-1 text-sm font-medium text-yellow-800">
-                      Ubicación GPS no guardada
-                    </Text>
-                    <Text className="mb-3 text-xs text-yellow-700">
-                      Este equipo no tiene ubicación GPS establecida, es
-                      estrictamente necesario guardar la ubicación exacta del
-                      equipo al momento de la entrega del mismo.
-                    </Text>
+            {/* Acciones Rápidas */}
+            <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "600",
+                  color: "#111827",
+                  marginBottom: 14,
+                }}
+              >
+                Acciones rápidas
+              </Text>
+
+              {equipment?.data?.latitude && equipment?.data?.longitude && (
+                <Button
+                  variant="secondary"
+                  text="Ver en Maps"
+                  icon="navigate"
+                  fullWidth
+                  onPress={handleGoToLocation}
+                />
+              )}
+
+              {equipment?.data?.customer_phone && (
+                <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
+                  <View style={{ flex: 1 }}>
                     <Button
-                      onPress={handleSaveLocation}
-                      variant="warning"
-                      size="sm"
-                      text="Establecer ubicación actual"
-                      icon="location"
-                      disabled={isSavingLocation}
-                      pressedOpacity={0.5}
+                      icon="call"
+                      text="Llamar"
+                      variant="primary"
+                      fullWidth
+                      href={`tel:${equipment?.data?.customer_phone}`}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Button
+                      icon="logo-whatsapp"
+                      text="WhatsApp"
+                      variant="whatsapp"
+                      fullWidth
+                      onPress={() =>
+                        Linking.openURL(
+                          `https://wa.me/${equipment?.data?.customer_phone}`,
+                        )
+                      }
                     />
                   </View>
                 </View>
-              </View>
+              )}
             </View>
+          </ScrollView>
+
+          {/* Loading overlay */}
+          {registerDeliveryMutation.isPending && (
+            <Loading
+              title="Completando entrega"
+              message="Guardando ubicación del equipo..."
+              size="large"
+              variant="overlay"
+              showProgress={false}
+            />
           )}
 
-          {/* Acciones Rápidas */}
-          <View className="mx-4 mb-6">
-            <Text className="mb-4 text-lg font-semibold text-gray-900">
-              Acciones Rápidas
-            </Text>
-
-            {equipment?.data?.latitude && equipment?.data?.longitude && (
-              <Button
-                variant="secondary"
-                text="Ver ubicación en el mapa"
-                icon="map"
-                onPress={handleGoToLocation}
-                className="mb-3"
-              />
-            )}
-
-            {equipment?.data?.customer_phone && (
-              <View className="flex-row gap-2">
-                <Button
-                  icon="call"
-                  text="Llamar"
-                  variant="primary"
-                  className="flex-1"
-                  href={`tel:${equipment?.data?.customer_phone}`}
-                />
-
-                <Button
-                  icon="logo-whatsapp"
-                  text="WhatsApp"
-                  variant="whatsapp"
-                  className="flex-1"
-                  onPress={() =>
-                    Linking.openURL(
-                      `https://wa.me/${equipment?.data?.customer_phone}`
-                    )
-                  }
-                />
-              </View>
-            )}
-          </View>
-        </ScrollView>
-      )}
-
-      {/* Loading overlay */}
-      {isSavingLocation && (
-        <Loading
-          title="Guardando ubicación"
-          message="Por favor, espera mientras guardamos la ubicación del equipo."
-          size="large"
-          variant="overlay"
-          showProgress={false}
-        />
+          {isSavingLocation && (
+            <Loading
+              title="Actualizando ubicación"
+              message="Guardando ubicación del equipo..."
+              size="large"
+              variant="overlay"
+              showProgress={false}
+            />
+          )}
+        </>
       )}
     </View>
   );

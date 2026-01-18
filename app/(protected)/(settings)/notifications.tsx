@@ -1,14 +1,16 @@
 import ScreenLayout from "@/shared/components/ScreenLayout";
 import { Stack } from "expo-router";
-import { Text, TouchableOpacity, View, Alert, AppState } from "react-native";
+import { Text, TouchableOpacity, View, AppState } from "react-native";
 import { authStore } from "@/store/auth.store";
 import { registerForPushNotificationsAsync } from "@/shared/utils/registerForPushNotificationsAsync";
 import { Ionicons } from "@expo/vector-icons";
 import { openAppSettings } from "@/shared/utils/openAppSettings";
 import { useEffect, useState } from "react";
 import * as Notifications from "expo-notifications";
+import { useAlert } from "@/shared/components/ui/Alert";
 
 export default function NotificationsScreen() {
+  const alert = useAlert();
   const [status, setStatus] = useState<Notifications.PermissionStatus>();
   const { user } = authStore();
 
@@ -28,7 +30,7 @@ export default function NotificationsScreen() {
 
     const subscription = AppState.addEventListener(
       "change",
-      handleAppStateChange
+      handleAppStateChange,
     );
 
     return () => {
@@ -40,7 +42,7 @@ export default function NotificationsScreen() {
 
   const handleToggleNotifications = async () => {
     if (isEnabled) {
-      Alert.alert(
+      alert.show(
         "Desactivar notificaciones",
         "¿Deseas ir a la configuración para desactivar las notificaciones?",
         [
@@ -50,13 +52,13 @@ export default function NotificationsScreen() {
             style: "default",
             onPress: openAppSettings,
           },
-        ]
+        ],
       );
     } else {
       try {
         await registerForPushNotificationsAsync(user.id);
       } catch {
-        Alert.alert(
+        alert.show(
           "Error",
           "No se pudieron activar las notificaciones. ¿Deseas ir a la configuración para activarlas manualmente?",
           [
@@ -66,7 +68,7 @@ export default function NotificationsScreen() {
               style: "default",
               onPress: openAppSettings,
             },
-          ]
+          ],
         );
       }
     }
