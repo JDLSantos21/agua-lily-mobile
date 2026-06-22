@@ -16,7 +16,7 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://agua-lily-api-dxqa3.ondigitalocean.app/api"
+        "EXPO_PUBLIC_API_URL": "https://api-lily.jdlsantos.com/api"
       },
       "environment": "production",
       "channel": "production"
